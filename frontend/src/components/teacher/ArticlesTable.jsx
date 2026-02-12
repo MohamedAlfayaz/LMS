@@ -156,9 +156,13 @@ const ArticlesTable = () => {
               }
               className="w-full border border-gray-200 px-4 py-3 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option>Science</option>
-              <option>Math</option>
-              <option>English</option>
+              <option value="Tamil">Tamil</option>
+              <option value="English">English</option>
+              <option value="Math">Math</option>
+              <option value="Science">Science</option>
+              <option value="History">History</option>
+              <option value="Art">Art</option>
+              <option value="computer">Computer</option>
             </select>
 
             <div className="flex justify-end gap-3">

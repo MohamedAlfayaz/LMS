@@ -205,23 +205,61 @@ const CreateArticle = () => {
               )}
 
               {/* VIDEO */}
+              {/* VIDEO */}
               {block.type === "video" && (
                 <>
+                  {/* Upload Video File */}
+                  <input
+                    type="file"
+                    accept="video/*"
+                    className="mb-4"
+                    onChange={(e) =>
+                      handleFileUpload(index, e.target.files[0])
+                    }
+                  />
+
+                  {/* Or Paste Video URL */}
                   <input
                     type="text"
-                    placeholder="Paste video URL"
+                    placeholder="Paste video URL (YouTube or direct MP4)"
                     className="w-full border p-3 rounded-xl mb-4"
                     value={block.value}
                     onChange={(e) => updateBlock(index, e.target.value)}
                   />
 
-                  {block.value && (
-                    <video
-                      controls
-                      src={block.value}
-                      className="rounded-2xl max-h-80 shadow-sm"
-                    />
-                  )}
+                  {block.value && (() => {
+                    const isYoutube =
+                      block.value.includes("youtube.com") ||
+                      block.value.includes("youtu.be");
+
+                    if (isYoutube) {
+                      const videoId =
+                        block.value.includes("youtu.be")
+                          ? block.value.split("youtu.be/")[1]
+                          : block.value.split("v=")[1]?.split("&")[0];
+
+                      return (
+                        <div className="flex justify-center">
+                          <iframe
+                            className="rounded-2xl shadow-md w-full max-w-3xl h-[400px]"
+                            src={`https://www.youtube.com/embed/${videoId}`}
+                            title="YouTube video"
+                            allowFullScreen
+                          />
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <video
+                        controls
+                        className="rounded-2xl max-h-80 shadow-sm w-full"
+                      >
+                        <source src={block.value} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    );
+                  })()}
                 </>
               )}
 

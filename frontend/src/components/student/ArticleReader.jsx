@@ -160,16 +160,43 @@ const ArticleReader = () => {
                     </div>
                   );
 
-                case "video":
+                case "video": {
+                  const isYoutube =
+                    block.value.includes("youtube.com") ||
+                    block.value.includes("youtu.be");
+
+                  if (isYoutube) {
+                    const videoId =
+                      block.value.includes("youtu.be")
+                        ? block.value.split("youtu.be/")[1]
+                        : block.value.split("v=")[1]?.split("&")[0];
+
+                    return (
+                      <div key={i} className="flex justify-center">
+                        <iframe
+                          className="rounded-2xl shadow-md w-full max-w-3xl h-[400px]"
+                          src={`https://www.youtube.com/embed/${videoId}`}
+                          title="YouTube video"
+                          allowFullScreen
+                        />
+                      </div>
+                    );
+                  }
+
                   return (
                     <div key={i} className="flex justify-center">
                       <video
-                        src={block.value}
                         controls
-                        className="rounded-2xl shadow-md max-h-[500px]"
-                      />
+                        preload="metadata"
+                        className="rounded-2xl shadow-md max-h-[500px] w-full"
+                      >
+                        <source src={block.value} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
                     </div>
                   );
+                }
+
 
                 case "3d":
                   return (
