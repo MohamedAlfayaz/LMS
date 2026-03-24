@@ -1,25 +1,15 @@
-import React, { useEffect, useState } from "react";
-import API from "../../api/api";
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useArticles } from "../../hooks/useArticles";
+import { setCategory, setSearch } from "../../store/highlightSlice";
 
 const StudentArticles = () => {
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [articles, setArticles] = useState([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const res = await API.get("/articles");
-        setArticles(res.data);
-      } catch {
-        console.log("Failed to fetch articles");
-      }
-    };
-
-    fetchArticles();
-  }, []);
+  const dispatch = useDispatch();
+  const { data: articles = [], isLoading } = useArticles();
+  const search = useSelector((state) => state.highlight.search);
+  const categoryFilter = useSelector((state) => state.highlight.category);
 
   const filtered = articles.filter((article) => {
     const matchCategory =
@@ -32,8 +22,16 @@ const StudentArticles = () => {
     return matchCategory && matchSearch;
   });
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen px-6 py-12">
+    <div className="min-h-screen px-6">
       <div className="max-w-6xl mx-auto">
 
         {/* HEADER */}
@@ -48,16 +46,16 @@ const StudentArticles = () => {
               placeholder="Search articles..."
               className="flex-1 md:w-64 border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => dispatch(setSearch(e.target.value))}
             />
 
             <div className="relative w-48">
               <select
                 className="appearance-none w-full bg-white border border-gray-200 px-4 py-3 pr-10 rounded-xl text-gray-700 font-medium shadow-sm 
-    focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400
-    hover:border-gray-300 transition"
+                  focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400
+                hover:border-gray-300 transition"
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
+                onChange={(e) => dispatch(setCategory(e.target.value))}
               >
                 <option value="All">All Categories</option>
                 <option value="Tamil">Tamil</option>
@@ -66,7 +64,7 @@ const StudentArticles = () => {
                 <option value="Science">Science</option>
                 <option value="History">History</option>
                 <option value="Art">Art</option>
-                <option value="computer">Computer</option>
+                <option value="Computer">Computer</option>
               </select>
 
               {/* Custom Arrow */}

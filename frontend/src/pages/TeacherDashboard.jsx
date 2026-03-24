@@ -1,17 +1,21 @@
-import React, { useState } from "react";
+import React from "react";
 import Sidebar from "../components/teacher/Sidebar";
 import StatsCards from "../components/teacher/StatsCards";
 import ChartsSection from "../components/teacher/ChartsSection";
-import CreateArticle from "../components/teacher/CreateArticle";
 import ArticlesTable from "../components/teacher/ArticlesTable";
-
+import { useSelector, useDispatch } from "react-redux";
+import { setActive } from "../store/uiSlice";
 
 const TeacherDashboard = () => {
-  const [active, setActive] = useState("Dashboard");
+  const active = useSelector((state) => state.ui.active);
+  const dispatch = useDispatch();
 
   return (
     <div className="flex pt-12">
-      <Sidebar active={active} setActive={setActive} />
+      <Sidebar
+        active={active}
+        setActive={(val) => dispatch(setActive(val))}
+      />
 
       <div className="pl-24 p-8 w-full">
         {active === "Dashboard" && (
@@ -21,11 +25,8 @@ const TeacherDashboard = () => {
           </>
         )}
 
-        {active === "Create Article" && <CreateArticle />}
-
         {active === "Analytics" && <ChartsSection />}
         {active === "Articles" && <ArticlesTable />}
-
       </div>
     </div>
   );

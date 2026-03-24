@@ -1,110 +1,132 @@
-import React, { useState } from "react";
-import { FiTrash2 } from "react-icons/fi";
-import API from "../../api/api";
+import React, { useEffect } from "react";
+import { FiTrash2, FiPlus } from "react-icons/fi";
+import {
+  createArticle,
+  uploadArticleFile,
+  getArticleById,
+  updateArticle,
+} from "../../api/articleApi";
 
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setTitle,
+  setCategory,
+  addBlock,
+  updateBlock,
+  removeBlock,
+  resetArticle,
+  setAllBlocks,
+} from "../../store/createArticleSlice";
+import { FiX } from "react-icons/fi"
+import { useParams, useNavigate } from "react-router-dom";
 
 const CreateArticle = () => {
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("Science");
-  const [blocks, setBlocks] = useState([]);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { id } = useParams();
 
-  // Add Block
-  const addBlock = (type) => {
-    setBlocks([...blocks, { type, value: "" }]);
-  };
+  const { title, category, blocks } = useSelector(
+    (state) => state.createArticle
+  );
 
-  // Update Block Content
-  const updateBlock = (index, value) => {
-    const updated = [...blocks];
-    updated[index].value = value;
-    setBlocks(updated);
-  };
+  useEffect(() => {
+    if (id) {
+      getArticleById(id).then((res) => {
+        const article = res?.article || res?.data?.article || res?.data || res;
 
-  // Remove Block
-  const removeBlock = (index) => {
-    const updated = blocks.filter((_, i) => i !== index);
-    setBlocks(updated);
-  };
+        dispatch(setTitle(article.title || ""));
+        dispatch(setCategory(article.category || ""));
 
-  // Handle File Upload
+        const formattedBlocks = (article.contentBlocks || []).map((b) =>
+          typeof b === "string" ? { type: "text", value: b } : b
+        );
+
+        dispatch(setAllBlocks(formattedBlocks));
+      });
+    }
+  }, [id, dispatch]);
+
   const handleFileUpload = async (index, file) => {
     if (!file) return;
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await API.post("/articles/upload", formData);
-
-      updateBlock(index, res.data.fileUrl);
-
-    } catch (err) {
-      alert("Image upload failed");
-    }
+    const res = await uploadArticleFile(file);
+    dispatch(updateBlock({ index, value: res.fileUrl }));
   };
 
+  const handleSubmit = async () => {
+    const payload = { title, category, contentBlocks: blocks };
 
-  // Publish (for now just console)
-  const handlePublish = async () => {
-    try {
-      await API.post("/articles", {
-        title,
-        category,
-        contentBlocks: blocks,
-      });
-
-      alert("Article Created Successfully");
-      setTitle("");
-      setBlocks([]);
-    } catch (err) {
-      alert("Failed to create article");
+    if (id) {
+      await updateArticle(id, payload);
+      alert("Updated");
+    } else {
+      await createArticle(payload);
+      alert("Created");
+      dispatch(resetArticle());
     }
+
+    navigate("/teacher");
   };
 
   return (
-    <div className="bg-gray-50 shadow-2xl rounded-2xl px-6 mt-5 py-10">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-100 px-4">
+      <div className="max-w-4xl mx-auto space-y-4 mt-20">
 
         {/* HEADER */}
-        <div className="flex justify-between items-center mb-10">
-          <h2 className="text-4xl font-bold text-gray-900">
-            Create Article
-          </h2>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">
+            {id ? "Edit Article" : "Create Article"}
+          </h1>
 
-          <button
-            onClick={handlePublish}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold shadow-md transition"
-          >
-            Publish
-          </button>
+          <div className="flex items-center gap-3">
+
+            {/* CLOSE BUTTON */}
+            <button
+              onClick={() => {
+                const confirmLeave = window.confirm(
+                  "You have unsaved changes. Are you sure you want to leave?"
+                );
+
+                if (confirmLeave) {
+                  dispatch(resetArticle());   // 🔥 FIX
+                  navigate("/teacher");
+                }
+              }}
+              className="p-2 rounded-lg hover:bg-gray-200 text-gray-600"
+            >
+              <FiX size={20} />
+            </button>
+
+            {/* MAIN CTA */}
+            <button
+              onClick={handleSubmit}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl shadow"
+            >
+              {id ? "Update" : "Publish"}
+            </button>
+
+          </div>
         </div>
 
-        {/* TITLE */}
-        <input
-          type="text"
-          placeholder="Article Title..."
-          className="w-full text-3xl font-semibold border-b border-gray-300 focus:outline-none focus:border-indigo-500 bg-transparent pb-3 mb-8"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white p-6 rounded-2xl shadow">
+            <input
+              type="text"
+              placeholder="Enter article title..."
+              value={title}
+              onChange={(e) => dispatch(setTitle(e.target.value))}
+              className="w-full text-2xl font-semibold outline-none"
+            />
+          </div>
 
-        {/* CATEGORY */}
-        <div className="mb-8 flex items-center justify-between">
+          {/* CATEGORY */}
+          <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
+            <span className="font-medium text-gray-600">Category</span>
 
-          {/* LEFT - LABEL */}
-          <label className="text-sm font-semibold text-gray-700">
-            Category
-          </label>
-
-          {/* RIGHT - SELECT */}
-          <div className="relative w-64">
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="appearance-none w-full bg-white border border-gray-200 px-4 py-3 pr-10 rounded-xl 
-      shadow-sm text-gray-800 font-medium
-      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
-      hover:border-gray-300 transition"
+              onChange={(e) => dispatch(setCategory(e.target.value))}
+              className="border px-4 py-2 rounded-lg"
             >
               <option value="Tamil">Tamil</option>
               <option value="English">English</option>
@@ -112,202 +134,105 @@ const CreateArticle = () => {
               <option value="Science">Science</option>
               <option value="History">History</option>
               <option value="Art">Art</option>
-              <option value="computer">Computer</option>
+              <option value="Computer">Computer</option>
             </select>
-
-            {/* Custom Arrow */}
-            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
           </div>
+
         </div>
 
-        {/* ADD BLOCK BUTTONS */}
-        <div className="flex gap-4 flex-wrap mb-10">
-          {["text", "image", "video", "3d"].map((type) => (
+        {/* TITLE */}
+
+
+        {/* ADD BLOCK */}
+        <div className="flex flex-wrap gap-3">
+          {["text", "image", "video", "pdf", "document"].map((type) => (
             <button
               key={type}
-              onClick={() => addBlock(type)}
-              className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-medium hover:bg-indigo-100 transition"
+              onClick={() => dispatch(addBlock(type))}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-blue-600 rounded-xl shadow-sm hover:bg-gray-50"
             >
-              + Add {type.toUpperCase()}
+              <FiPlus size={14} />
+              <span className="text-gray-800">{type}</span>
             </button>
           ))}
         </div>
 
         {/* BLOCKS */}
-        <div className="space-y-8">
+        <div className="space-y-3">
           {blocks.map((block, index) => (
             <div
               key={index}
-              className="relative bg-white p-6 rounded-3xl shadow-sm border border-gray-100"
+              className="bg-white p-6 rounded-2xl shadow relative"
             >
-
-              {/* DELETE */}
               <button
-                onClick={() => removeBlock(index)}
-                className="absolute top-5 right-5 text-gray-400 hover:text-red-500 transition"
+                onClick={() => dispatch(removeBlock(index))}
+                className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
               >
-                <FiTrash2 size={20} />
+                <FiTrash2 />
               </button>
 
               {/* TEXT */}
               {block.type === "text" && (
                 <textarea
-                  placeholder="Write your content..."
-                  className="w-full text-lg leading-8 border-none focus:outline-none resize-none"
-                  rows="5"
+                  placeholder="Write something..."
                   value={block.value}
-                  onChange={(e) => updateBlock(index, e.target.value)}
+                  onChange={(e) =>
+                    dispatch(updateBlock({ index, value: e.target.value }))
+                  }
+                  className="w-full min-h-[120px] outline-none"
                 />
               )}
 
-              {/* IMAGE */}
-              {block.type === "image" && (
-                <>
+              {/* FILE BLOCKS */}
+              {["image", "video", "pdf", "document"].includes(block.type) && (
+                <div className="space-y-3">
                   <input
                     type="file"
-                    accept="image/*"
-                    className="mb-4"
                     onChange={(e) =>
                       handleFileUpload(index, e.target.files[0])
                     }
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Or paste image URL"
-                    className="w-full border p-3 rounded-xl mb-4"
-                    value={block.value}
-                    onChange={(e) => updateBlock(index, e.target.value)}
+                    className="block w-full text-sm"
                   />
 
                   {block.value && (
-                    <img
-                      src={block.value}
-                      alt="preview"
-                      className="rounded-2xl max-h-80 object-contain shadow-sm"
-                    />
+                    <div className="border rounded-xl p-3">
+                      {block.type === "image" && (
+                        <img src={block.value} className="rounded-xl" />
+                      )}
+
+                      {block.type === "video" && (
+                        <video controls className="w-full rounded-xl">
+                          <source src={block.value} />
+                        </video>
+                      )}
+
+                      {block.type === "pdf" && (
+                        <iframe
+                          src={block.value}
+                          className="w-full h-[400px]"
+                        />
+                      )}
+
+                      {block.type === "document" && (
+                        <a
+                          href={block.value}
+                          target="_blank"
+                          className="text-indigo-600"
+                        >
+                          Open Document
+                        </a>
+                      )}
+                    </div>
                   )}
-                </>
-              )}
-
-              {/* VIDEO */}
-              {/* VIDEO */}
-              {block.type === "video" && (
-                <>
-                  {/* Upload Video File */}
-                  <input
-                    type="file"
-                    accept="video/*"
-                    className="mb-4"
-                    onChange={(e) =>
-                      handleFileUpload(index, e.target.files[0])
-                    }
-                  />
-
-                  {/* Or Paste Video URL */}
-                  <input
-                    type="text"
-                    placeholder="Paste video URL (YouTube or direct MP4)"
-                    className="w-full border p-3 rounded-xl mb-4"
-                    value={block.value}
-                    onChange={(e) => updateBlock(index, e.target.value)}
-                  />
-
-                  {block.value && (() => {
-                    const isYoutube =
-                      block.value.includes("youtube.com") ||
-                      block.value.includes("youtu.be");
-
-                    if (isYoutube) {
-                      const videoId =
-                        block.value.includes("youtu.be")
-                          ? block.value.split("youtu.be/")[1]
-                          : block.value.split("v=")[1]?.split("&")[0];
-
-                      return (
-                        <div className="flex justify-center">
-                          <iframe
-                            className="rounded-2xl shadow-md w-full max-w-3xl h-[400px]"
-                            src={`https://www.youtube.com/embed/${videoId}`}
-                            title="YouTube video"
-                            allowFullScreen
-                          />
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <video
-                        controls
-                        className="rounded-2xl max-h-80 shadow-sm w-full"
-                      >
-                        <source src={block.value} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>
-                    );
-                  })()}
-                </>
-              )}
-
-              {/* 3D */}
-              {block.type === "3d" && (
-                <>
-                  <input
-                    type="file"
-                    accept=".glb,.gltf"
-                    className="mb-4"
-                    onChange={(e) =>
-                      handleFileUpload(index, e.target.files[0])
-                    }
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Or paste 3D model URL"
-                    className="w-full border p-3 rounded-xl mb-3"
-                    value={block.value}
-                    onChange={(e) => updateBlock(index, e.target.value)}
-                  />
-
-                  {block.value && (
-                    <p className="text-sm text-gray-500">
-                      3D Model added successfully
-                    </p>
-                  )}
-                </>
+                </div>
               )}
             </div>
           ))}
         </div>
 
-        {/* BOTTOM PUBLISH (mobile safety) */}
-        <div className="mt-12 md:hidden">
-          <button
-            onClick={handlePublish}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold"
-          >
-            Publish Article
-          </button>
-        </div>
-
       </div>
     </div>
   );
-
 };
 
 export default CreateArticle;

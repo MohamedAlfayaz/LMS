@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import API from "../../api/api";
+import React from "react";
+import { useAnalytics } from "../../hooks/useAnalytics";
 import { BookOpen, Users, BarChart3 } from "lucide-react";
 
 const StatCard = ({ title, value, icon: Icon, gradient }) => (
@@ -25,41 +25,9 @@ const StatCard = ({ title, value, icon: Icon, gradient }) => (
 
 const StatsCards = () => {
 
-  const [stats, setStats] = useState({
-    totalArticles: 0,
-    totalViews: 0,
-    totalStudents: 0,
-    topCategory: "-",
-    topCategoryCount: 0
-  });
+  const { data, isLoading } = useAnalytics();
 
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await API.get("/analytics");
-        const summary = res.data?.summary || {};
-
-        setStats({
-          totalArticles: summary.totalArticles || 0,
-          totalViews: summary.totalViews || 0,
-          totalStudents: summary.totalStudents || 0,
-          topCategory: summary.topCategory || "-",
-          topCategoryCount: summary.topCategoryCount || 0
-        });
-
-      } catch (err) {
-        console.error("Stats fetch failed", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {[1, 2, 3].map((i) => (
@@ -72,19 +40,21 @@ const StatsCards = () => {
     );
   }
 
+  const summary = data?.summary || {}
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-5">
 
       <StatCard
         title="Articles Created"
-        value={stats.totalArticles}
+        value={summary.totalArticles}
         icon={BookOpen}
         gradient="bg-gradient-to-r from-indigo-500 to-indigo-600"
       />
 
       <StatCard
         title="Total Students"
-        value={stats.totalStudents}
+        value={summary.totalStudents}
         icon={Users}
         gradient="bg-gradient-to-r from-emerald-500 to-green-600"
       />
@@ -92,14 +62,14 @@ const StatsCards = () => {
 
       <StatCard
         title="Total Student Articles Read"
-        value={stats.totalViews}
+        value={summary.totalViews}
         icon={Users}
         gradient="bg-gradient-to-r from-purple-500 to-purple-600"
       />
 
       <StatCard
         title="Top Category"
-        value={`${stats.topCategory} (${stats.topCategoryCount})`}
+        value={`${summary.topCategory} (${summary.topCategoryCount})`}
         icon={BarChart3}
         gradient="bg-gradient-to-r from-pink-500 to-rose-500"
       />

@@ -1,160 +1,147 @@
-import React, { useEffect, useState } from "react";
-import API from "../../api/api";
-import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import React, { useState } from "react";
+import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
+import { useArticles } from "../../hooks/useArticles";
+import { useNavigate } from "react-router-dom";
 
 const ArticlesTable = () => {
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: articles = [], isLoading, deleteArticle, updateArticle } = useArticles();
+  const navigate = useNavigate();
   const [editingArticle, setEditingArticle] = useState(null);
 
-  const fetchArticles = async () => {
-    try {
-      const res = await API.get("/articles");
-      setArticles(res.data);
-    } catch {
-      console.error("Error fetching articles");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchArticles();
-  }, []);
-
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     if (!window.confirm("Delete this article?")) return;
-
-    try {
-      await API.delete(`/articles/${id}`);
-      setArticles(articles.filter((a) => a._id !== id));
-    } catch {
-      alert("Delete failed");
-    }
+    deleteArticle(id);
   };
 
-  const handleUpdate = async () => {
-    try {
-      await API.put(`/articles/${editingArticle._id}`, {
-        title: editingArticle.title,
-        category: editingArticle.category,
-      });
+  const handleUpdate = () => {
+    if (!editingArticle?._id) return;
 
-      setEditingArticle(null);
-      fetchArticles();
-    } catch {
-      alert("Update failed");
-    }
+    updateArticle({
+      _id: editingArticle._id,
+      title: editingArticle.title,
+      category: editingArticle.category,
+    });
+
+    setEditingArticle(null);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="bg-white p-8 rounded-3xl shadow-md">
-        <div className="h-40 animate-pulse bg-gray-200 rounded-2xl" />
+      <div className="bg-white p-6 rounded-2xl shadow">
+        <div className="h-40 animate-pulse bg-gray-200 rounded-xl" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100">
-      
+    <div className="bg-white p-6 rounded-2xl shadow border border-gray-100">
+
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">
-          Articles
-        </h2>
-        <span className="text-sm text-gray-400">
-          {articles.length} total
-        </span>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Articles</h2>
+          <p className="text-sm text-gray-400">{articles.length} total articles</p>
+        </div>
+
+        <button
+          onClick={() => navigate("/create-article")}
+          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl shadow hover:bg-indigo-700 transition"
+        >
+          <FiPlus />
+          Create
+        </button>
       </div>
+
+      {/* EMPTY STATE */}
+      {articles.length === 0 && (
+        <div className="text-center py-16 text-gray-400">
+          No articles found 🚫
+        </div>
+      )}
 
       {/* TABLE */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          
-          <thead>
-            <tr className="text-gray-500 text-sm border-b">
-              <th className="py-4">Title</th>
-              <th>Category</th>
-              <th>Created</th>
-              <th className="text-right">Actions</th>
-            </tr>
-          </thead>
+      {articles.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full">
 
-          <tbody>
-            {articles.map((article) => (
-              <tr
-                key={article._id}
-                className="border-b hover:bg-gray-50 transition"
-              >
-                <td className="py-5 font-medium text-gray-800">
-                  {article.title}
-                </td>
-
-                <td>
-                  <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-sm">
-                    {article.category}
-                  </span>
-                </td>
-
-                <td className="text-gray-500 text-sm">
-                  {new Date(article.createdAt).toLocaleDateString()}
-                </td>
-
-                <td className="text-right space-x-3">
-                  <button
-                    onClick={() => setEditingArticle(article)}
-                    className="inline-flex items-center gap-1 text-yellow-600 hover:text-yellow-700 text-sm font-medium"
-                  >
-                    <FiEdit2 size={16} />
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(article._id)}
-                    className="inline-flex items-center gap-1 text-red-600 hover:text-red-700 text-sm font-medium"
-                  >
-                    <FiTrash2 size={16} />
-                    Delete
-                  </button>
-                </td>
+            <thead>
+              <tr className="text-left text-gray-500 text-sm border-b">
+                <th className="py-3">Title</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th className="text-right">Actions</th>
               </tr>
-            ))}
-          </tbody>
+            </thead>
 
-        </table>
-      </div>
+            <tbody>
+              {articles.map((article) => (
+                <tr
+                  key={article._id}
+                  className="border-b hover:bg-gray-50 transition"
+                >
+                  <td className="py-4 font-medium text-gray-800">
+                    {article.title}
+                  </td>
 
-      {/* EDIT MODAL */}
+                  <td>
+                    <span className="px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                      {article.category}
+                    </span>
+                  </td>
+
+                  <td className="text-sm text-gray-500">
+                    {new Date(article.createdAt).toLocaleDateString()}
+                  </td>
+
+                  <td className="text-right">
+                    <div className="flex justify-end gap-2">
+
+                      <button
+                        onClick={() => navigate(`/edit-article/${article._id}`)}
+                        className="p-2 rounded-lg hover:bg-yellow-100 text-yellow-600"
+                      >
+                        <FiEdit2 />
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(article._id)}
+                        className="p-2 rounded-lg hover:bg-red-100 text-red-600"
+                      >
+                        <FiTrash2 />
+                      </button>
+
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+
+          </table>
+        </div>
+      )}
+
+      {/* MODAL */}
       {editingArticle && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md">
+          <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md">
 
-            <h3 className="text-xl font-semibold mb-6">
-              Edit Article
-            </h3>
+            <h3 className="text-lg font-semibold mb-4">Edit Article</h3>
 
             <input
               type="text"
               value={editingArticle.title}
               onChange={(e) =>
-                setEditingArticle({
-                  ...editingArticle,
-                  title: e.target.value,
-                })
+                setEditingArticle({ ...editingArticle, title: e.target.value })
               }
-              className="w-full border border-gray-200 px-4 py-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border px-4 py-2 rounded-lg mb-3 focus:ring-2 focus:ring-indigo-500 outline-none"
             />
 
             <select
               value={editingArticle.category}
               onChange={(e) =>
-                setEditingArticle({
-                  ...editingArticle,
-                  category: e.target.value,
-                })
+                setEditingArticle({ ...editingArticle, category: e.target.value })
               }
-              className="w-full border border-gray-200 px-4 py-3 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border px-4 py-2 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
             >
               <option value="Tamil">Tamil</option>
               <option value="English">English</option>
@@ -162,20 +149,20 @@ const ArticlesTable = () => {
               <option value="Science">Science</option>
               <option value="History">History</option>
               <option value="Art">Art</option>
-              <option value="computer">Computer</option>
+              <option value="Computer">Computer</option>
             </select>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setEditingArticle(null)}
-                className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300 transition"
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleUpdate}
-                className="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
               >
                 Update
               </button>

@@ -48,7 +48,8 @@ const Register = () => {
   };
 
   return (
-    <div className="flex min-h-screen overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center">
+    <div className="flex w-full max-w-4xl overflow-hidden">
       {/* LEFT SIDE */}
       <div className="hidden md:flex w-1/2 bg-gradient-to-br from-purple-600 to-indigo-700 text-white rounded-2xl items-center justify-center p-12">
         <div className="max-w-md">
@@ -186,6 +187,7 @@ const Register = () => {
           </p>
         </div>
       </div>
+    </div>
     </div>
   );
 };

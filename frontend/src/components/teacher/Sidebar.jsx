@@ -5,17 +5,34 @@ import {
   FiFileText,
   FiBarChart2,
 } from "react-icons/fi";
+import { useSelector, useDispatch } from "react-redux";
+import { setActive } from "../../store/uiSlice";
+import { useNavigate } from "react-router-dom";
 
-const Sidebar = ({ active, setActive }) => {
+
+const Sidebar = () => {
+  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const active = useSelector((state) => state.ui.active);
+
+
   const menus = [
     { name: "Dashboard", icon: <FiHome size={20} /> },
-    { name: "Create Article", icon: <FiEdit size={20} /> },
+    // { name: "Create Article", route: "/create-article", icon: <FiEdit size={20} /> },
     { name: "Articles", icon: <FiFileText size={20} /> },
     { name: "Analytics", icon: <FiBarChart2 size={20} /> },
   ];
 
+  // const handleClick = (item) => {
+  //   if (item.route) {
+  //     navigate(item.route); // ✅ route navigation
+  //   } else {
+  //     dispatch(setActive(menus.name)); // ✅ state navigation
+  //   }
+  // };
+
   return (
-    <div className="w-20 bg-white shadow-lg h-screen fixed left-0 top-0 flex flex-col justify-center items-center py-6 space-y-6 z-40">
+    <div className="w-18 bg-white shadow-lg h-screen fixed left-0 top-0 flex flex-col justify-center items-center py-6 space-y-6 z-40">
 
       <div className="relative group inline-block">
         <h2 className="text-indigo-600 font-bold text-xl cursor-pointer">
@@ -24,7 +41,7 @@ const Sidebar = ({ active, setActive }) => {
 
         <span
           className="absolute left-10 top-1/2 -translate-y-1/2
-          bg-black text-white text-sm px-3 py-1 rounded-md
+          bg-indigo-600 text-white text-sm px-3 py-1 rounded-md
           opacity-0 group-hover:opacity-100
           transition duration-200 whitespace-nowrap"
         >
@@ -35,7 +52,7 @@ const Sidebar = ({ active, setActive }) => {
       {menus.map((menu) => (
         <div
           key={menu.name}
-          onClick={() => setActive(menu.name)}
+          onClick={() => dispatch(setActive(menu.name))}
           className="relative group"
         >
           {/* Icon */}
@@ -50,7 +67,7 @@ const Sidebar = ({ active, setActive }) => {
 
           {/* Hover Label */}
           <span className="absolute left-13 top-1/2 -translate-y-1/2 
-            bg-black text-white text-sm px-3 py-1 rounded-md 
+            bg-indigo-600 text-white text-sm px-3 py-1 rounded-md 
             opacity-0 group-hover:opacity-100 
             transition duration-200 whitespace-nowrap">
             {menu.name}

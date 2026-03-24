@@ -10,8 +10,12 @@ import Navbar from "./components/Navbar";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import ArticleReader from "./components/student/ArticleReader";
+import CreateArticle from "./components/teacher/CreateArticle";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RoleRoute from "./routes/RoleRoute";
@@ -22,7 +26,9 @@ const Layout = ({ children }) => {
 
   const hideNavbar =
     location.pathname === "/login" ||
-    location.pathname === "/register";
+    location.pathname === "/register" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname.startsWith("/reset-password");
 
   return (
     <>
@@ -44,6 +50,8 @@ const App = () => {
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Teacher Dashboard */}
           <Route
@@ -56,6 +64,28 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          
+           <Route
+            path="/create-article"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRole="teacher">
+                  <CreateArticle />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/edit-article/:id"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRole="teacher">
+                  <CreateArticle />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
 
           {/* Student Dashboard */}
           <Route
@@ -79,7 +109,7 @@ const App = () => {
                 </RoleRoute>
               </ProtectedRoute>
             }
-          /> 
+          />
 
           {/* Default Redirect */}
           <Route path="*" element={<Login />} />

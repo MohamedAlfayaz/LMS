@@ -5,8 +5,14 @@ import {
   FiEdit3,
   FiClock,
 } from "react-icons/fi";
+import { useSelector, useDispatch } from "react-redux";
+import { setActive } from "../../store/uiSlice";
 
-const StudentSidebar = ({ active, setActive }) => {
+const StudentSidebar = () => {
+
+  const dispatch = useDispatch()
+  const active = useSelector((state)=> state.ui.active)
+
   const menus = [
     { name: "Dashboard", icon: <FiHome size={20} /> },
     { name: "Browse Articles", icon: <FiBookOpen size={20} /> },
@@ -24,7 +30,7 @@ const StudentSidebar = ({ active, setActive }) => {
 
         <span
           className="absolute left-10 top-1/2 -translate-y-1/2
-          bg-black text-white text-sm px-3 py-1 rounded-md
+          bg-indigo-600 text-white text-sm px-3 py-1 rounded-md
           opacity-0 group-hover:opacity-100
           transition duration-200 whitespace-nowrap"
         >
@@ -35,7 +41,7 @@ const StudentSidebar = ({ active, setActive }) => {
       {menus.map((menu) => (
         <div
           key={menu.name}
-          onClick={() => setActive(menu.name)}
+          onClick={() => dispatch(setActive(menu.name))}
           className="relative group"
         >
           {/* Icon */}
@@ -52,7 +58,7 @@ const StudentSidebar = ({ active, setActive }) => {
           <span
             className="
               absolute left-13 top-1/2 -translate-y-1/2
-              bg-black text-white text-sm px-3 py-1 rounded-md
+              bg-indigo-600 text-white text-sm px-3 py-1 rounded-md
               opacity-0 group-hover:opacity-100
               transition duration-200 whitespace-nowrap
               z-50 shadow-lg pointer-events-none
