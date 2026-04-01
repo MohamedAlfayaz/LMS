@@ -3,119 +3,211 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useLocation,
+  Navigate,
 } from "react-router-dom";
 
-import Navbar from "./components/Navbar";
+/* Layouts */
+import MainLayout from "./components/MainLayout";
+
+/* Pages */
+import AdminPanel from "./pages/AdminPanel";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
+
+import StudentArticles from "./components/student/StudentArticles";
+import StudentHistory from "./components/student/StudentHistory";
+import MyNotes from "./components/student/MyNotes";
+
+import TeacherArticles from "./components/teacher/ArticlesTable";
+import TeacherAnalytics from "./components/teacher/ChartsSection";
+// import AddStudent from "./components/teacher/AddStudent";
+
 import ArticleReader from "./components/student/ArticleReader";
 import CreateArticle from "./components/teacher/CreateArticle";
+
+/* Auth */
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 
-
+/* Routes */
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RoleRoute from "./routes/RoleRoute";
 
-/* ---------------- Layout Component ---------------- */
-const Layout = ({ children }) => {
-  const location = useLocation();
+/* ---------- Role Wrappers ---------- */
 
-  const hideNavbar =
-    location.pathname === "/login" ||
-    location.pathname === "/register" ||
-    location.pathname === "/forgot-password" ||
-    location.pathname.startsWith("/reset-password");
+const AdminRoute = ({ children }) => (
+  <ProtectedRoute>
+    <RoleRoute allowedRoles={["admin"]}>{children}</RoleRoute>
+  </ProtectedRoute>
+);
 
-  return (
-    <>
-      {!hideNavbar && <Navbar />}
-      <div className="min-h-screen">
-        {children}
-      </div>
-    </>
-  );
-};
+const TeacherRoute = ({ children }) => (
+  <ProtectedRoute>
+    <RoleRoute allowedRoles={["teacher"]}>{children}</RoleRoute>
+  </ProtectedRoute>
+);
 
-/* ---------------- App Component ---------------- */
+const StudentRoute = ({ children }) => (
+  <ProtectedRoute>
+    <RoleRoute allowedRoles={["student"]}>{children}</RoleRoute>
+  </ProtectedRoute>
+);
+
+/* ---------- App ---------- */
+
 const App = () => {
   return (
     <Router>
-      <Layout>
-        <Routes>
+      <Routes>
 
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
+        {/* ---------- PUBLIC (NO LAYOUT) ---------- */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Teacher Dashboard */}
-          <Route
-            path="/teacher"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRole="teacher">
-                  <TeacherDashboard />
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
-          
-           <Route
-            path="/create-article"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRole="teacher">
-                  <CreateArticle />
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
-           <Route
-            path="/edit-article/:id"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRole="teacher">
-                  <CreateArticle />
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
+        {/* ---------- ADMIN ---------- */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <MainLayout>
+                <AdminPanel />
+              </MainLayout>
+            </AdminRoute>
+          }
+        />
 
+        {/* ---------- TEACHER ---------- */}
+        <Route
+          path="/teacher"
+          element={
+            <TeacherRoute>
+              <MainLayout>
+                <TeacherDashboard />
+              </MainLayout>
+            </TeacherRoute>
+          }
+        />
 
-          {/* Student Dashboard */}
-          <Route
-            path="/student"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRole="student">
-                  <StudentDashboard />
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/teacher/create-article"
+          element={
+            <TeacherRoute>
+              <MainLayout>
+                <CreateArticle />
+              </MainLayout>
+            </TeacherRoute>
+          }
+        />
 
-          {/* Student Article Reader */}
-          <Route
-            path="/student/article/:id"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRole="student">
-                  <ArticleReader />
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/teacher/articles"
+          element={
+            <TeacherRoute>
+              <MainLayout>
+                <TeacherArticles />
+              </MainLayout>
+            </TeacherRoute>
+          }
+        />
 
-          {/* Default Redirect */}
-          <Route path="*" element={<Login />} />
+        <Route
+          path="/teacher/analytics"
+          element={
+            <TeacherRoute>
+              <MainLayout>
+                <TeacherAnalytics />
+              </MainLayout>
+            </TeacherRoute>
+          }
+        />
 
-        </Routes>
-      </Layout>
+        {/* <Route
+          path="/teacher/add-student"
+          element={
+            <TeacherRoute>
+              <MainLayout>
+                <AddStudent />
+              </MainLayout>
+            </TeacherRoute>
+          }
+        /> */}
+
+        <Route
+          path="/teacher/edit-article/:id"
+          element={
+            <TeacherRoute>
+              <MainLayout>
+                <CreateArticle />
+              </MainLayout>
+            </TeacherRoute>
+          }
+        />
+
+        {/* ---------- STUDENT ---------- */}
+        <Route
+          path="/student"
+          element={
+            <StudentRoute>
+              <MainLayout>
+                <StudentDashboard />
+              </MainLayout>
+            </StudentRoute>
+          }
+        />
+
+        <Route
+          path="/student/articles"
+          element={
+            <StudentRoute>
+              <MainLayout>
+                <StudentArticles />
+              </MainLayout>
+            </StudentRoute>
+          }
+        />
+
+        <Route
+          path="/student/history"
+          element={
+            <StudentRoute>
+              <MainLayout>
+                <StudentHistory />
+              </MainLayout>
+            </StudentRoute>
+          }
+        />
+
+        <Route
+          path="/student/notes"
+          element={
+            <StudentRoute>
+              <MainLayout>
+                <MyNotes />
+              </MainLayout>
+            </StudentRoute>
+          }
+        />
+
+        <Route
+          path="/student/article/:id"
+          element={
+            <StudentRoute>
+              <MainLayout>
+                <ArticleReader />
+              </MainLayout>
+            </StudentRoute>
+          }
+        />
+
+        {/* ---------- DEFAULT ---------- */}
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="*" element={<Navigate to="/login" />} />
+
+      </Routes>
     </Router>
   );
 };

@@ -99,7 +99,7 @@ const ChartsSection = () => {
   };
 
   return (
-    <div>
+    <div className="">
 
       <div className="mb-2">
         <h2 className="text-2xl font-bold text-gray-700">

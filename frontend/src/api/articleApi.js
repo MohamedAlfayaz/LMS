@@ -34,7 +34,6 @@ export const createArticle = async (data) => {
   return res.data;
 };
 
-// UPLOAD
 export const uploadArticleFile = async (file) => {
   const formData = new FormData();
   formData.append("file", file);

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
 import { useArticles } from "../../hooks/useArticles";
 import { useNavigate } from "react-router-dom";
+import Button from "../ui/Button";
 
 const ArticlesTable = () => {
   const { data: articles = [], isLoading, deleteArticle, updateArticle } = useArticles();
@@ -34,7 +35,7 @@ const ArticlesTable = () => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow border border-gray-100">
+    <div className="bg-white p-6  rounded-2xl shadow border border-gray-100">
 
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
@@ -43,13 +44,13 @@ const ArticlesTable = () => {
           <p className="text-sm text-gray-400">{articles.length} total articles</p>
         </div>
 
-        <button
-          onClick={() => navigate("/create-article")}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl shadow hover:bg-indigo-700 transition"
+        <Button
+          onClick={() => navigate("/teacher/create-article")}
+          variant="primary"
         >
           <FiPlus />
-          Create
-        </button>
+          Create Article
+        </Button>
       </div>
 
       {/* EMPTY STATE */}
@@ -59,65 +60,116 @@ const ArticlesTable = () => {
         </div>
       )}
 
-      {/* TABLE */}
+      {/* TABLE / CARD RESPONSIVE */}
       {articles.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-
-            <thead>
-              <tr className="text-left text-gray-500 text-sm border-b">
-                <th className="py-3">Title</th>
-                <th>Category</th>
-                <th>Date</th>
-                <th className="text-right">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {articles.map((article) => (
-                <tr
-                  key={article._id}
-                  className="border-b hover:bg-gray-50 transition"
-                >
-                  <td className="py-4 font-medium text-gray-800">
-                    {article.title}
-                  </td>
-
-                  <td>
-                    <span className="px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
-                      {article.category}
-                    </span>
-                  </td>
-
-                  <td className="text-sm text-gray-500">
-                    {new Date(article.createdAt).toLocaleDateString()}
-                  </td>
-
-                  <td className="text-right">
-                    <div className="flex justify-end gap-2">
-
-                      <button
-                        onClick={() => navigate(`/edit-article/${article._id}`)}
-                        className="p-2 rounded-lg hover:bg-yellow-100 text-yellow-600"
-                      >
-                        <FiEdit2 />
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(article._id)}
-                        className="p-2 rounded-lg hover:bg-red-100 text-red-600"
-                      >
-                        <FiTrash2 />
-                      </button>
-
-                    </div>
-                  </td>
+        <>
+          {/* ================= DESKTOP + TABLET TABLE ================= */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-gray-500 text-sm border-b">
+                  <th className="py-3">Title</th>
+                  <th>Category</th>
+                  <th>Date</th>
+                  <th className="text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
+              </thead>
 
-          </table>
-        </div>
+              <tbody>
+                {articles.map((article) => (
+                  <tr
+                    key={article._id}
+                    className="border-b hover:bg-gray-50 transition"
+                  >
+                    <td className="py-4 font-medium text-gray-800">
+                      {article.title}
+                    </td>
+
+                    <td>
+                      <span className="px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                        {article.category}
+                      </span>
+                    </td>
+
+                    <td className="text-sm text-gray-500">
+                      {new Date(article.createdAt).toLocaleDateString()}
+                    </td>
+
+                    <td className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          onClick={() => navigate(`/teacher/edit-article/${article._id}`)}
+                          variant="warning"
+                        >
+                          <FiEdit2 />
+                        </Button>
+
+                        <Button
+                          onClick={() => handleDelete(article._id)}
+                          variant="danger"
+                        >
+                          <FiTrash2 />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ================= MOBILE CARD VIEW ================= */}
+          <div className="md:hidden space-y-4">
+            {articles.map((article) => (
+              <div
+                key={article._id}
+                className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-4"
+              >
+                {/* TOP SECTION */}
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="font-semibold text-gray-900 text-base leading-tight">
+                    {article.title}
+                  </h3>
+
+                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                    {new Date(article.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+
+                {/* CATEGORY */}
+                <div className="mb-4">
+                  <span className="inline-block px-3 py-1 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-full">
+                    {article.category}
+                  </span>
+                </div>
+
+                {/* DIVIDER */}
+                <div className="border-t border-gray-100 mb-3"></div>
+
+                {/* ACTIONS */}
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-gray-400">Manage Article</p>
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => navigate(`/teacher/edit-article/${article._id}`)}
+                      variant="warning"
+                    >
+                      <FiEdit2 size={16} />
+                    </Button>
+
+                    <Button
+                      onClick={() => handleDelete(article._id)}
+                      variant="danger"
+                    >
+                      <FiTrash2 size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* MODAL */}

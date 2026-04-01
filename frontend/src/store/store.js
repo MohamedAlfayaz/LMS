@@ -1,13 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
-import uiReducer from './uiSlice';
 import highlightReducer from './highlightSlice';
 import createArticleReducer from './createArticleSlice';
+import modalReducer from './modalSlice';
 
 
 export const store = configureStore({
   reducer: {
-    ui : uiReducer,
     highlight : highlightReducer,
-    createArticle : createArticleReducer
+    createArticle : createArticleReducer,
+    modal : modalReducer
   },
 });

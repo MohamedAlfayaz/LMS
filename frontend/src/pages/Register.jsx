@@ -1,193 +1,239 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import API from "../api/api";
+import { useRegister } from "../hooks/useLogin"
+import { FaEye, FaEyeSlash, FaUserLock, FaMailBulk, FaUser, FaUserPlus } from "react-icons/fa";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input"
+
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const schema = z.object({
+  name: z.string().min(2, "Name required"),
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(6, "Minimum 6 characters"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
 
 const Register = () => {
   const navigate = useNavigate();
+  const { mutate, isPending } = useRegister();
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [show, setShow] = useState(false)
 
-  const [role, setRole] = useState("student");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const {
+    register,
+    handleSubmit,
+    setError,
+    reset,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: zodResolver(schema),
+    mode: "onChange",
+  });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      await API.post("/auth/register", {
-        name,
-        email,
-        password,
-        role,
-      });
-
-      setSuccess("Account created successfully!");
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-    } catch (err) {
-      setError("Registration failed. Email may already exist.");
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = (data) => {
+    mutate(
+      {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      },
+      {
+        onSuccess: () => {
+          reset();
+          navigate("/login");
+        },
+        onError: (err) => {
+          setError("root", {
+            message:
+              err?.response?.data?.message || "Registration failed",
+          });
+        },
+      }
+    );
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-    <div className="flex w-full max-w-4xl overflow-hidden">
-      {/* LEFT SIDE */}
-      <div className="hidden md:flex w-1/2 bg-gradient-to-br from-purple-600 to-indigo-700 text-white rounded-2xl items-center justify-center p-12">
-        <div className="max-w-md">
-          <h1 className="text-4xl font-bold leading-tight">
-            Join the Learning Platform 🚀
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+
+      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
+
+        {/* LEFT SIDE */}
+        <div className="hidden md:flex flex-col justify-center bg-gradient-to-br from-purple-600 to-indigo-700 text-white p-10 lg:p-14">
+
+          <h1 className="text-3xl lg:text-4xl text-center font-bold leading-tight">
+            Join the Platform 🚀
           </h1>
-          <p className="mt-6 text-lg text-indigo-100">
-            Create your account and start tracking your knowledge growth today.
+
+          <p className="mt-5 text-sm text-center lg:text-base text-indigo-100">
+            Create your account and start your learning journey today.
           </p>
+
+          <div className="mt-10 hidden lg:block">
+            <div className="bg-white/10 backdrop-blur p-4 text-center rounded-xl">
+              <p className="text-sm">
+                🚀 Learn smarter
+              </p>
+              <p className="text-sm">📊 Track progress</p>
+              <p className="text-sm">🎯 Achieve goals</p>
+            </div>
+          </div>
+
         </div>
-      </div>
 
-      {/* RIGHT SIDE */}
-      <div className="flex-1 flex items-center justify-center py-2 px-4">
-        <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Create Account
-          </h2>
-          <p className="text-sm text-gray-500 mb-3">
-            Fill in your details to get started
-          </p>
+        {/* RIGHT SIDE */}
+        <div className="flex items-center justify-center p-6 sm:p-10 lg:p-14">
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-600 rounded-xl text-sm">
-              {error}
+          <div className="w-full max-w-md">
+
+            {/* MOBILE TITLE */}
+            <div className="md:hidden mb-3 text-center">
+              <h1 className="text-2xl font-bold text-gray-900">
+                Create Account 🚀
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Start your journey
+              </p>
             </div>
-          )}
 
-          {success && (
-            <div className="mb-4 p-3 bg-green-100 text-green-600 rounded-xl text-sm">
-              {success}
-            </div>
-          )}
+            {/* HEADER */}
+            <h2 className="text-2xl text-center sm:text-3xl font-bold text-gray-800">
+              Sign Up
+            </h2>
+            <p className="text-sm text-center text-gray-500 mb-2">
+              Fill in your details
+            </p>
 
-          <form onSubmit={handleRegister} className="space-y-2">
-            {/* ROLE */}
-            <div className="flex bg-gray-100 rounded-xl p-1">
-              {[
-                { label: "Student", value: "student" },
-                { label: "Teacher", value: "teacher" },
-              ].map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  onClick={() => setRole(r.value)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
-                    role === r.value
-                      ? "bg-white shadow text-indigo-600"
-                      : "text-gray-500"
-                  }`}
+            {/* ERROR */}
+            {errors.root && (
+              <div className="mb-4 p-3 bg-red-100 text-red-600 rounded-lg text-sm">
+                {errors.root.message}
+              </div>
+            )}
+
+            {/* FORM */}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+              {/* NAME */}
+              <div>
+                <Input
+                  label="Full Name"
+                  type="text"
+                  icon={<FaUser />}
+                  placeholder="Your Full Name"
+                  {...register("name")}
+                />
+              </div>
+
+              {errors.name && (
+                <p className="text-red-500 text-xs">
+                  {errors.name.message}
+                </p>
+              )}
+
+              {/* EMAIL */}
+              <div>
+                <Input
+                  label="Email Address"
+                  type="email"
+                  icon={<FaMailBulk />}
+                  placeholder="you@example.com"
+                  {...register("email")}
+                />
+              </div>
+              {errors.email && (
+                <p className="text-red-500 text-xs">
+                  {errors.email.message}
+                </p>
+              )}
+
+              {/* PASSWORD */}
+              <div className="relative mt-2">
+                <Input
+                  label="Password"
+                  icon={<FaUserLock />}
+                  type={show ? "text" : "password"}
+                  placeholder="Minimum 6 characters"
+                  {...register("password")}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <Button
+                    type="button"
+                    onClick={() => setShow(!show)}
+                    variant="ghost"
+                  >
+                    {show ? <FaEyeSlash /> : <FaEye />}
+                  </Button>
+                </div>
+                {errors.password && (
+                  <p className="text-red-500 text-xs">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              {/* CONFIRM PASSWORD */}
+              <div className="relative mt-2">
+                <Input
+                  label="Confirm Password"
+                  icon={<FaUserLock />}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Re-enter password"
+                  {...register("confirmPassword")}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <Button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    variant="ghost"
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </Button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-xs">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+
+              {/* BUTTON */}
+              <div className="flex justify-center items-center">
+                <Button
+                  type="submit"
+                  disabled={!isValid || isPending}
+                  variant="primary"
                 >
-                  {r.label}
-                </button>
-              ))}
-            </div>
+                  <FaUserPlus />
+                  {
+                    isPending ?
+                      <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+                      : "Create Account"
+                  }
+                </Button>
+              </div>
+            </form>
 
-            {/* NAME */}
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Full Name
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                className="mt-1 w-full border border-gray-200 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            {/* EMAIL */}
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Email Address
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="mt-1 w-full border border-gray-200 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            {/* PASSWORD */}
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimum 6 characters"
-                className="mt-1 w-full border border-gray-200 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            {/* CONFIRM */}
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter password"
-                className="mt-1 w-full border border-gray-200 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            {/* SUBMIT */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
-            >
-              {loading ? "Creating Account..." : "Create Account"}
-            </button>
-          </form>
-
-          <p className="text-sm text-center mt-6 text-gray-500">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-indigo-600 font-medium hover:underline"
-            >
-              Login
-            </Link>
-          </p>
+            {/* LOGIN LINK */}
+            <p className="text-sm text-center mt-4 text-gray-500">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-indigo-600 font-medium hover:underline"
+              >
+                Login
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };

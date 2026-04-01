@@ -26,7 +26,7 @@ const StudentHistory = () => {
     });
 
     const topCategory = Object.entries(categoryCount).sort(
-      (a, b) => a[1] - b[1]
+      (a, b) => b[1] - a[1]
     )[0]?.[0];
 
     return {
@@ -60,7 +60,7 @@ const StudentHistory = () => {
             </p>
           </div>
 
-          <div className="bg-indigo-600 px-4 py-2 rounded-xl shadow text-md font-bold text-white">
+          <div className="bg-indigo-600 px-4 text-center py-2 rounded-xl shadow text-md font-bold text-white">
             {history.length} Articles
           </div>
         </div>
@@ -124,7 +124,7 @@ const StudentHistory = () => {
             </p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
             {history.map((item) => (
               <div

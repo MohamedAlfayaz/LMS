@@ -1,7 +1,18 @@
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  FileText,
+  File,
+  StickyNote,
+  Trash2,
+  Highlighter,
+  Save
+} from "lucide-react";
+
+import Button from "../ui/Button";
 
 import {
   useArticle,
@@ -16,10 +27,9 @@ import {
 } from "../../store/highlightSlice";
 
 import { trackReading } from "../../api/studentApi";
-import PDFHighlight from "./PDFHighlight"; // adjust path
+import PDFHighlight from "./PDFHighlight";
 
 const ArticleReader = () => {
-
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -27,16 +37,13 @@ const ArticleReader = () => {
   const { data: article, isLoading } = useArticle(id);
   const { data: notes = [] } = useHighlights(id);
 
-  // console.log("Article:", article);
-
   const { createMutation, deleteMutation } =
     useHighlightMutations();
 
   const { selectedText, noteComment } =
     useSelector((state) => state.highlight || {});
 
-  /* TRACK READING TIME */
-
+  /* TRACK READING */
   useEffect(() => {
     const startTime = Date.now();
     return () => {
@@ -53,8 +60,7 @@ const ArticleReader = () => {
     };
   }, [id]);
 
-  /* HANDLE TEXT SELECTION */
-
+  /* TEXT SELECT */
   const handleHighlight = () => {
     const text =
       window.getSelection().toString().trim();
@@ -62,7 +68,6 @@ const ArticleReader = () => {
   };
 
   /* SAVE NOTE */
-
   const saveNote = () => {
     if (!selectedText) return;
     createMutation.mutate({
@@ -79,74 +84,77 @@ const ArticleReader = () => {
     deleteMutation.mutate(noteId);
   };
 
-  const handleClose = () => {
-    navigate(-1);
-  };
+  const handleClose = () => navigate(-1);
 
-  /* LOADING STATE */
-
+  /* LOADING */
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+        <div className="animate-spin h-14 w-14 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col">
 
-      <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full">
-        {/* TOP BAR */}
-        <div className="bg-white border-b mt-15 px-6 py-4 flex justify-between items-center">
+      {/* TOP BAR */}
+      <div className="sticky top-0 z-50 backdrop-blur bg-white/70 border-b px-6 py-3 flex justify-between items-center">
 
-          <h2 className="text-sm font-semibold text-gray-600">
+        <div className="flex items-center gap-2 text-gray-600">
+          <BookOpen size={18} />
+          <span className="text-sm font-semibold">
             Reading Mode
-          </h2>
-
-          <button
-            onClick={handleClose}
-            className="px-5 py-2 text-sm bg-gray-700 text-white rounded-full"
-          >
-            Close
-          </button>
-
+          </span>
         </div>
 
-        {/* CONTENT */}
+        <Button
+          onClick={handleClose}
+          variant="secondary"
+          >
+          <ArrowLeft size={16} />
+          Back
+        </Button>
 
-        <div
-          className="flex-1 flex justify-center"
-          onMouseUp={handleHighlight}
-        >
+      </div>
 
-          <div className="w-full max-w-3xl p-6">
-            <h1 className="text-4xl font-bold text-center mb-6">
-              {article?.title}
-            </h1>
+      {/* CONTENT */}
+      <div
+        className="flex-1 flex justify-center px-4"
+        onMouseUp={handleHighlight}
+      >
+        <div className="w-full max-w-3xl py-10">
 
-            <div className="space-y-5 text-lg leading-9 text-gray-700">
-              {article.contentBlocks?.map((block, i) => {
-                switch (block.type) {
-                  case "text":
-                    return (
-                      <p key={i} className="text-justify">
-                        {block.value}
-                      </p>
-                    );
+          {/* TITLE */}
+          <h1 className="text-4xl font-bold text-center mb-10 text-gray-900 leading-tight">
+            {article?.title}
+          </h1>
 
-                  case "image":
-                    return (
-                      <div key={i} className="flex justify-center">
-                        <img
-                          src={block.value}
-                          alt="article"
-                          className="rounded-2xl shadow-md max-h-[500px] object-contain"
-                        />
-                      </div>
-                    );
+          {/* CONTENT BLOCKS */}
+          <div className="space-y-6 text-[18px] leading-8 text-gray-700">
 
-                  case "video": {
+            {article.contentBlocks?.map((block, i) => {
+              switch (block.type) {
+
+                case "text":
+                  return (
+                    <p key={i} className="text-justify">
+                      {block.value}
+                    </p>
+                  );
+
+                case "image":
+                  return (
+                    <div key={i} className="flex justify-center">
+                      <img
+                        src={block.value}
+                        alt=""
+                        className="rounded-2xl shadow-lg hover:scale-[1.01] transition"
+                      />
+                    </div>
+                  );
+
+                 case "video": {
                     const isYoutube =
                       block.value.includes("youtube.com") ||
                       block.value.includes("youtu.be");
@@ -183,10 +191,13 @@ const ArticleReader = () => {
                     );
                   }
 
-                  case "pdf":
-                    return (
+                case "pdf":
+                  return (
+                    <div
+                      key={i}
+                      className="rounded-2xl overflow-hidden border shadow-sm"
+                    >
                       <PDFHighlight
-                        key={i}
                         url={block.value}
                         highlights={notes.filter(n => n.type === "pdf")}
                         onSaveHighlight={(highlight) => {
@@ -199,127 +210,138 @@ const ArticleReader = () => {
                           });
                         }}
                       />
-                    );
+                    </div>
+                  );
 
-                  case "document":
-                    return (
-                      <div key={i} className="bg-gray-100 p-5 rounded-2xl flex justify-between items-center">
+                case "document":
+                  return (
+                    <div
+                      key={i}
+                      className="bg-white border p-5 rounded-2xl flex justify-between items-center shadow-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="text-indigo-600" />
 
-                        <div className="flex flex-col">
-                          <p className="font-medium text-gray-800">
-                            Document File
+                        <div>
+                          <p className="font-medium">
+                            Document
                           </p>
                           <p className="text-sm text-gray-500 break-all">
                             {block.value}
                           </p>
                         </div>
-
-                        <a
-                          href={block.value}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
-                        >
-                          Open
-                        </a>
-
                       </div>
-                    );
 
-                  default:
-                    return null;
-                }
-              })}
-            </div>
+                      <a
+                        href={block.value}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm flex items-center gap-2"
+                      >
+                        <File size={16} />
+                        Open
+                      </a>
+                    </div>
+                  );
 
-            {/* NOTES */}
+                default:
+                  return null;
+              }
+            })}
+          </div>
 
-            {notes.length > 0 && (
-              <div className="mt-10">
-                <h3 className="text-xl font-bold mb-6">
-                  Your Highlights
-                </h3>
+          {/* NOTES */}
+          {notes.length > 0 && (
+            <div className="mt-14 bg-white border rounded-2xl p-6 shadow-sm">
+
+              <h3 className="text-lg font-semibold mb-5 flex items-center gap-2">
+                <StickyNote size={18} />
+                Your Highlights
+              </h3>
+
+              <div className="space-y-4">
                 {notes.map((note) => (
                   <div
                     key={note._id}
-                    className="border p-4 rounded mb-4"
+                    className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg relative"
                   >
-                    <p className="italic text-yellow-700">
+                    <div className="flex items-center justify-between">
+                       <p className="italic text-gray-800">
                       "{note.text}"
                     </p>
+
                     {note.comment && (
-                      <p className="text-sm mt-2">
-                        Comment: {note.comment}
+                      <p className="text-sm text-gray-600">
+                        {note.comment}
                       </p>
                     )}
-                    <button
+
+                    <Button
                       onClick={() => deleteNote(note._id)}
-                      className="text-red-500 text-sm mt-2"
+                      variant="danger"
                     >
                       <Trash2 size={18} />
-                    </button>
+                    </Button>
 
+                    </div>
+                   
                   </div>
-
                 ))}
-
-              </div>
-
-            )}
-
-          </div>
-
-        </div>
-
-        {/* MODAL */}
-
-        {selectedText && (
-
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-
-            <div className="bg-white p-6 rounded-xl w-96">
-
-              <p className="italic mb-3">
-                "{selectedText}"
-              </p>
-
-              <textarea
-                value={noteComment}
-                onChange={(e) =>
-                  dispatch(setNoteComment(e.target.value))
-                }
-                className="w-full border p-2 rounded"
-              />
-
-              <div className="flex justify-end gap-3 mt-4">
-
-                <button
-                  onClick={() => dispatch(clearHighlight())}
-                  className="px-3 py-1 bg-gray-200 rounded"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  onClick={saveNote}
-                  className="px-3 py-1 bg-indigo-600 text-white rounded"
-                >
-                  Save
-                </button>
-
               </div>
 
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* FLOATING HIGHLIGHT MODAL */}
+      {selectedText && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+
+          <div className="bg-white shadow-xl border rounded-xl p-4 w-[350px]">
+
+            <div className="flex items-center gap-2 mb-2 text-indigo-600">
+              <Highlighter size={16} />
+              <span className="text-sm font-medium">
+                New Highlight
+              </span>
+            </div>
+
+            <p className="text-sm italic text-gray-600 mb-2">
+              "{selectedText}"
+            </p>
+
+            <textarea
+              value={noteComment}
+              onChange={(e) =>
+                dispatch(setNoteComment(e.target.value))
+              }
+              placeholder="Add note..."
+              className="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
+            />
+
+            <div className="flex justify-end gap-2 mt-3">
+              <Button
+                onClick={() => dispatch(clearHighlight())}
+                variant="secondary"
+              >
+                Cancel
+              </Button>
+
+              <Button
+                onClick={saveNote}
+                variant="primary"
+              >
+                <Save size={14} />
+                Save
+              </Button>
+            </div>
 
           </div>
-
-        )}
-
-      </div>
+        </div>
+      )}
     </div>
-
   );
-
 };
 
 export default ArticleReader;
