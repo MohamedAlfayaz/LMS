@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useRegister } from "../hooks/useAuth"
-import { FaEye, FaEyeSlash, FaUserLock, FaMailBulk, FaUser, FaUserPlus } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaUserLock, FaMailBulk, FaUser, FaUserPlus, FaBookOpen, FaChartLine, FaBullseye } from "react-icons/fa";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input"
 
@@ -12,7 +12,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 const schema = z.object({
   name: z.string().min(2, "Name required"),
   email: z.string().email("Enter a valid email"),
-  password: z.string().min(6, "Minimum 6 characters"),
+  password: z.string().min(6, "Minimum 6 characters")
+    .regex(/[A-Z]/, "At least one uppercase letter")
+    .regex(/[0-9]/, "At least one number")
+    .regex(/[@$!%*?&]/, "At least one special character"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -22,7 +25,7 @@ const schema = z.object({
 const Register = () => {
   const navigate = useNavigate();
   const { mutate, isPending } = useRegister();
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [show, setShow] = useState(false)
 
@@ -66,26 +69,53 @@ const Register = () => {
       <div className="w-full max-w-6xl bg-white rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
 
         {/* LEFT SIDE */}
-        <div className="hidden md:flex flex-col justify-center bg-gradient-to-br from-purple-600 to-indigo-700 text-white p-10 lg:p-14">
+        <div className="hidden md:flex flex-col justify-center 
+                bg-gradient-to-br from-purple-600 via-indigo-600 to-indigo-800 
+                text-white p-10 lg:p-14 relative overflow-hidden">
 
-          <h1 className="text-3xl lg:text-4xl text-center font-bold leading-tight">
-            Join the Platform 🚀
-          </h1>
+          {/* BACKGROUND GLOW */}
+          <div className="absolute top-0 left-0 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-72 h-72 bg-indigo-400/20 rounded-full blur-3xl"></div>
 
-          <p className="mt-5 text-sm text-center lg:text-base text-indigo-100">
-            Create your account and start your learning journey today.
-          </p>
+          {/* TOP CONTENT */}
+          <div className="relative z-10 flex flex-col items-center gap-3">
 
-          <div className="mt-10 hidden lg:block">
-            <div className="bg-white/10 backdrop-blur p-4 text-center rounded-xl">
-              <p className="text-sm">
-                🚀 Learn smarter
-              </p>
-              <p className="text-sm">📊 Track progress</p>
-              <p className="text-sm">🎯 Achieve goals</p>
+            {/* ICON */}
+            <div className="w-12 h-12 flex items-center justify-center rounded-xl 
+                    bg-white/20 backdrop-blur mb-3 shadow-lg">
+              <FaUserPlus size={24} />
             </div>
+
+            {/* TITLE */}
+            <h1 className="text-3xl lg:text-4xl font-bold leading-tight">
+              Join the Platform
+            </h1>
+
+            {/* SUBTITLE */}
+            <p className="mt-2 text-sm text-center lg:text-base text-indigo-100 max-w-sm">
+              Create your account and unlock powerful learning tools designed to help you grow faster.
+            </p>
+
           </div>
 
+          {/* FEATURES */}
+          <div className="relative z-10 mt-8 space-y-4">
+
+            <div className="flex items-center gap-3 bg-white/10 p-3 rounded-xl backdrop-blur">
+              <FaBookOpen className="text-yellow-300" />
+              <p className="text-sm">Learn smarter with structured content</p>
+            </div>
+
+            <div className="flex items-center gap-3 bg-white/10 p-3 rounded-xl backdrop-blur">
+              <FaChartLine className="text-green-300" />
+              <p className="text-sm">Track your progress in real-time</p>
+            </div>
+
+            <div className="flex items-center gap-3 bg-white/10 p-3 rounded-xl backdrop-blur">
+              <FaBullseye className="text-pink-300" />
+              <p className="text-sm">Achieve your learning goals faster</p>
+            </div>
+          </div>
         </div>
 
         {/* RIGHT SIDE */}
@@ -94,22 +124,27 @@ const Register = () => {
           <div className="w-full max-w-md">
 
             {/* MOBILE TITLE */}
-            <div className="md:hidden mb-3 text-center">
-              <h1 className="text-2xl font-bold text-gray-900">
-                Create Account 🚀
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Start your journey
-              </p>
-            </div>
+            <div className="text-center mb-4">
 
-            {/* HEADER */}
-            <h2 className="text-2xl text-center sm:text-3xl font-bold text-gray-800">
-              Sign Up
-            </h2>
-            <p className="text-sm text-center text-gray-500 mb-2">
-              Fill in your details
-            </p>
+              {/* ICON */}
+              <div className="flex justify-center mb-2">
+                <div className="w-10 h-10 flex items-center justify-center rounded-xl 
+                    bg-indigo-100 text-indigo-600 shadow-md">
+                  <FaUserPlus />
+                </div>
+              </div>
+
+              {/* MAIN HEADING */}
+              <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Create Your Account
+              </h2>
+
+              {/* SUB HEADING */}
+              <p className="text-sm text-gray-500 mt-1">
+                Join and start your learning journey
+              </p>
+
+            </div>
 
             {/* ERROR */}
             {errors.root && (
@@ -130,13 +165,12 @@ const Register = () => {
                   placeholder="Your Full Name"
                   {...register("name")}
                 />
+                {errors.name && (
+                  <p className="text-red-500 text-xs">
+                    {errors.name.message}
+                  </p>
+                )}
               </div>
-
-              {errors.name && (
-                <p className="text-red-500 text-xs">
-                  {errors.name.message}
-                </p>
-              )}
 
               {/* EMAIL */}
               <div>
@@ -147,12 +181,13 @@ const Register = () => {
                   placeholder="you@example.com"
                   {...register("email")}
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-xs">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
-              {errors.email && (
-                <p className="text-red-500 text-xs">
-                  {errors.email.message}
-                </p>
-              )}
+
 
               {/* PASSWORD */}
               <div className="relative mt-2">
@@ -209,14 +244,15 @@ const Register = () => {
                 <Button
                   type="submit"
                   disabled={!isValid || isPending}
-                  variant="primary"
+                  variant="register"
                 >
                   <FaUserPlus />
                   {
-                    isPending ?
-                      <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
-                      : "Create Account"
-                  }
+                    isPending ? (
+                      <span className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></span>
+                    ) : (
+                      "Create Account"
+                    )}
                 </Button>
               </div>
             </form>

@@ -3,69 +3,58 @@ import Input from "../ui/Input";
 import CreateUserModal from "./CreateUserModal";
 
 import { useState } from "react";
-import { FiTrash2, FiEdit2, FiSearch, FiUsers, FiUser, FiUserCheck, FiUserPlus } from "react-icons/fi";
+import {
+  FiTrash2,
+  FiEdit2,
+  FiSearch,
+  FiUsers,
+  FiUser,
+  FiUserCheck,
+  FiUserPlus,
+} from "react-icons/fi";
 
-// ✅ NEW
 import { useDeleteUser } from "../../hooks/useUsers";
-import { useDebounce } from "../../hooks/useDebounce"
+import { useTable } from "../../hooks/useTable"; // 🔥 NEW
 
 const roles = [
-  { key: "all", label: "All", icon: <FiUsers /> },
+  { key: "All", label: "All", icon: <FiUsers /> },
   { key: "admin", label: "Admin", icon: <FiUserCheck /> },
   { key: "teacher", label: "Teacher", icon: <FiUser /> },
   { key: "student", label: "Student", icon: <FiUserPlus /> },
 ];
 
 export default function UsersTable({ users, loading }) {
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 400)
-
-  const [roleFilter, setRoleFilter] = useState("all");
-
   const [editUser, setEditUser] = useState(null);
   const [open, setOpen] = useState(false);
 
-  const [page, setPage] = useState(1);
-  const perPage = 5;
-
-  // ✅ React Query delete
   const deleteUser = useDeleteUser();
 
-  const filtered = users.filter((u) => {
-    const matchSearch = u.name.toLowerCase().includes(debouncedSearch.toLowerCase());
-    const matchRole =
-      roleFilter === "all" ? true : u.role === roleFilter;
-    return matchSearch && matchRole;
-  });
+  // 🔥 GLOBAL TABLE STATE
+  const {
+    search,
+    category,
+    page,
+    totalPages,
+    filtered,
+    paginated,
+    setSearch,
+    setCategory,
+    setPage,
+  } = useTable(users, "name", "role");
 
-  const paginated = filtered.slice(
-    (page - 1) * perPage,
-    page * perPage
-  );
-
-  // ✅ FIXED DELETE
   const handleDelete = async (id) => {
     if (!window.confirm("Delete user?")) return;
 
     try {
       await deleteUser.mutateAsync(id);
-
     } catch (err) {
       console.error(err);
       alert("Delete failed");
     }
   };
 
-  const roleTag = (role) =>
-    role === "teacher"
-      ? "bg-green-100 text-green-700"
-      : "bg-blue-100 text-blue-700";
-
   const truncateName = (name) =>
     name.length > 8 ? name.slice(0, 8) + "..." : name;
-
-  const truncateEmail = (email) =>
-    email.length > 12 ? email.slice(0, 12) + "..." : email;
 
   return (
     <div className="bg-white rounded-2xl shadow-md overflow-hidden">
@@ -73,7 +62,7 @@ export default function UsersTable({ users, loading }) {
       {/* HEADER */}
       <div className="p-4 border-b flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
 
-        <div className="flex justify-center items-center gap-3">
+        <div className="flex items-center gap-3">
           <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
             <FiUsers />
           </div>
@@ -97,11 +86,11 @@ export default function UsersTable({ users, loading }) {
               {roles.map((role) => (
                 <button
                   key={role.key}
-                  onClick={() => setRoleFilter(role.key)}
+                  onClick={() => setCategory(role.key)}
                   className={`flex items-center gap-1 sm:gap-2 
                     px-3 sm:px-4 py-1.5 text-[10px] sm:text-xs font-medium 
                     whitespace-nowrap rounded-full transition-all duration-300
-                    ${roleFilter === role.key
+                    ${category === role.key
                       ? "bg-white text-indigo-600 shadow-md scale-105"
                       : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"
                     }
@@ -128,13 +117,7 @@ export default function UsersTable({ users, loading }) {
 
       {/* LOADING */}
       {loading ? (
-        <div className="p-6 flex justify-center">
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-14 bg-gray-200 rounded animate-pulse" />
-            ))}
-          </div>
-        </div>
+        <div className="p-6">Loading...</div>
       ) : filtered.length === 0 ? (
         <div className="p-6 text-center text-gray-500">
           No users found 🚫
@@ -171,7 +154,6 @@ export default function UsersTable({ users, loading }) {
 
                       <div>
                         <p className="font-semibold text-gray-800">{u.name}</p>
-                        <p className="text-xs text-gray-400">User ID: {u._id.slice(-4)}</p>
                       </div>
                     </td>
 
@@ -248,9 +230,6 @@ export default function UsersTable({ users, loading }) {
                       <p className="font-semibold text-gray-800 text-sm">
                         {truncateName(u.name)}
                       </p>
-                      <p className="text-xs text-gray-400">
-                        ID: {u._id.slice(-4)}
-                      </p>
                     </div>
                   </div>
 
@@ -294,7 +273,6 @@ export default function UsersTable({ users, loading }) {
                   <Button
                     onClick={() => handleDelete(u._id)}
                     variant="danger"
-                    className="flex-1 flex items-center justify-center gap-1 py-2"
                   >
                     <FiTrash2 size={14} />
                     Delete
@@ -306,10 +284,9 @@ export default function UsersTable({ users, loading }) {
             ))}
           </div>
 
-          {/* PAGINATION */}
-          <div className="flex items-center justify-center gap-2 p-4">
+          {/* 🔥 PAGINATION */}
+          <div className="flex justify-center items-center gap-2 my-3">
 
-            {/* PREV */}
             <Button
               onClick={() => setPage(page - 1)}
               disabled={page === 1}
@@ -318,34 +295,32 @@ export default function UsersTable({ users, loading }) {
               Prev
             </Button>
 
-            {/* PAGE NUMBERS */}
-            {[...Array(Math.ceil(filtered.length / perPage))].map((_, i) => {
+            {[...Array(totalPages)].map((_, i) => {
               const pageNum = i + 1;
 
               return (
                 <button
                   key={i}
                   onClick={() => setPage(pageNum)}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition
-                  ${page === pageNum
-                      ? "bg-indigo-600 text-white border-indigo-600"
+                  className={`px-3 py-1 text-xs border rounded-lg
+                              ${page === pageNum
+                      ? "bg-indigo-600 text-white"
                       : "bg-white hover:bg-gray-100"
-                    }
-                `}
+                    }`}
                 >
                   {pageNum}
                 </button>
               );
             })}
 
-            {/* NEXT */}
             <Button
               onClick={() => setPage(page + 1)}
-              disabled={page * perPage >= filtered.length}
+              disabled={page === totalPages}
               variant="lightgray"
             >
               Next
             </Button>
+
           </div>
         </>
       )}
@@ -360,7 +335,6 @@ export default function UsersTable({ users, loading }) {
           editUser={editUser}
         />
       )}
-
     </div>
   );
 }

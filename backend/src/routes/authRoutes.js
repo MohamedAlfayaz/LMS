@@ -129,7 +129,7 @@ router.post("/forgot-password", async (req, res) => {
 
     const resetLink = `http://localhost:5173/reset-password/${token}`;
 
-    console.log("RESET LINK 👉", resetLink);
+    // console.log("RESET LINK 👉", resetLink);
 
     // ✅ IMPORTANT (for frontend navigation)
     res.json({

@@ -4,7 +4,7 @@ import { useLogin } from "../hooks/useAuth";
 import { jwtDecode } from "jwt-decode";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../store/authSlice";
-import { FaEye, FaEyeSlash, FaUserLock, FaMailBulk } from "react-icons/fa";
+import { FaUserLock, FaMailBulk, FaEye, FaEyeSlash, FaBookOpen, FaChartLine, FaBullseye, FaSignInAlt } from "react-icons/fa";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input"
 
@@ -107,55 +107,82 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4">
 
-      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
+      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
 
-        {/* LEFT SIDE (DESKTOP + TABLET) */}
-        <div className="hidden md:flex flex-col justify-center bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-10 lg:p-14">
+        {/* 🔥 LEFT SIDE (PREMIUM HERO) */}
+        <div className="hidden md:flex flex-col justify-between 
+                      bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 
+                      text-white p-10 lg:p-14 relative overflow-hidden">
 
-          <h1 className="text-3xl lg:text-4xl text-center font-bold leading-tight">
-            Welcome Back 👋
-          </h1>
+          {/* BACKGROUND GLOW */}
+          <div className="absolute top-0 left-0 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-72 h-72 bg-indigo-400/20 rounded-full blur-3xl"></div>
 
-          <p className="mt-5 text-sm text-center lg:text-base text-indigo-100">
-            Continue your learning journey and track your progress easily.
-          </p>
+          {/* TOP */}
+          <div className="relative z-10 flex flex-col items-center">
 
-          {/* EXTRA VISUAL (OPTIONAL) */}
-          <div className="mt-10 hidden lg:block">
-            <div className="bg-white/10 backdrop-blur p-4 text-center rounded-xl">
-              <p className="text-sm">
-                🚀 Learn smarter
-              </p>
-              <p className="text-sm">📊 Track progress</p>
-              <p className="text-sm">🎯 Achieve goals</p>
+            <div className="w-12 h-12 flex items-center justify-center rounded-xl 
+                          bg-white/20 backdrop-blur mb-6 shadow-lg">
+              <FaUserLock size={22} />
             </div>
+
+            <h1 className="text-3xl lg:text-4xl font-bold leading-tight">
+              Welcome Back
+            </h1>
+
+            <p className="mt-4 text-sm text-center lg:text-base text-indigo-100 max-w-sm">
+              Continue your journey, track progress, and unlock your learning potential.
+            </p>
+
+          </div>
+
+          {/* FEATURES */}
+          <div className="relative z-10 space-y-4 mt-10">
+
+            <div className="flex items-center gap-3 bg-white/10 p-3 rounded-xl backdrop-blur">
+              <FaBookOpen className="text-yellow-300" />
+              <p className="text-sm">Structured learning paths</p>
+            </div>
+
+            <div className="flex items-center gap-3 bg-white/10 p-3 rounded-xl backdrop-blur">
+              <FaChartLine className="text-green-300" />
+              <p className="text-sm">Track progress easily</p>
+            </div>
+
+            <div className="flex items-center gap-3 bg-white/10 p-3 rounded-xl backdrop-blur">
+              <FaBullseye className="text-pink-300" />
+              <p className="text-sm">Achieve your goals faster</p>
+            </div>
+
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* 🔥 RIGHT SIDE */}
         <div className="flex items-center justify-center p-6 sm:p-10 lg:p-14">
 
           <div className="w-full max-w-md">
 
-            {/* MOBILE TITLE */}
-            <div className="md:hidden mb-6 text-center">
-              <h1 className="text-2xl font-bold text-gray-900">
-                Welcome Back 👋
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Login to continue
-              </p>
-            </div>
+            {/* 🔥 HEADER */}
+            <div className="text-center mb-6">
 
-            {/* HEADER */}
-            <h2 className="text-2xl text-center sm:text-3xl font-bold text-gray-900 mb-2">
-              Sign In
-            </h2>
-            <p className="text-sm text-center text-gray-500 mb-6">
-              Enter your credentials to continue
-            </p>
+              <div className="flex justify-center mb-3">
+                <div className="w-11 h-11 flex items-center justify-center rounded-xl 
+                              bg-indigo-100 text-indigo-600 shadow-sm">
+                  <FaUserLock />
+                </div>
+              </div>
+
+              <h2 className="flex items-center justify-center gap-2 text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Sign In <span className="text-indigo-600"><FaSignInAlt /></span>
+              </h2>
+
+              <p className="text-sm text-gray-500 mt-1">
+                Enter your credentials to continue
+              </p>
+
+            </div>
 
             {/* ERROR */}
             {errors.root && (
@@ -166,6 +193,7 @@ const Login = () => {
 
             {/* FORM */}
             <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+
               {/* EMAIL */}
               <div>
                 <Input
@@ -176,9 +204,7 @@ const Login = () => {
                   {...register("email")}
                 />
                 {errors.email && (
-                  <div className="text-red-500 text-xs">
-                    {errors.email.message}
-                  </div>
+                  <p className="text-red-500 text-xs">{errors.email.message}</p>
                 )}
               </div>
 
@@ -210,31 +236,36 @@ const Login = () => {
               </div>
 
               {/* OPTIONS */}
-              <div className="flex items-center justify-around text-sm">
-                <label className="flex items-center gap-2">
+              <div className="flex items-center justify-between text-sm">
+
+                <label className="flex items-center gap-2 text-gray-600">
                   <input type="checkbox" className="accent-indigo-600" />
-                  Remember
+                  Remember me
                 </label>
 
                 <Link
                   to="/forgot-password"
                   className="text-indigo-600 hover:underline"
                 >
-                  Forgot ?
+                  Forgot?
                 </Link>
+
               </div>
 
               {/* BUTTON */}
-              <div className="flex justify-center items-center">
+              <div className="flex justify-center">
                 <Button
                   type="submit"
                   disabled={!isValid || loginMutation.isPending}
-                  variant="primary"
+                  variant="login"
                 >
                   {loginMutation.isPending ? (
                     <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
                   ) : (
-                    "Login"
+                    <>
+                      <FaSignInAlt />
+                      Login
+                    </>
                   )}
                 </Button>
               </div>
@@ -250,6 +281,7 @@ const Login = () => {
                 Register
               </Link>
             </p>
+
           </div>
         </div>
       </div>

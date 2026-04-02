@@ -17,7 +17,10 @@ const getSchema = (isEdit) =>
 
     password: isEdit
       ? z.string().min(6, "Min 6 chars").optional().or(z.literal(""))
-      : z.string().min(6, "Password required"),
+      : z.string().min(6, "Minimum 6 characters")
+        .regex(/[A-Z]/, "At least one uppercase letter")
+        .regex(/[0-9]/, "At least one number")
+        .regex(/[@$!%*?&]/, "At least one special character"),
 
     role: z.enum(["student", "teacher"]),
   });
@@ -172,10 +175,9 @@ export default function CreateUserModal({ onClose, editUser }) {
                   key={role}
                   onClick={() => reset({ ...getValues(), role })}
                   className={`flex-1 py-2 rounded-lg text-xs font-medium border transition
-                    ${
-                      watch("role") === role
-                        ? "bg-indigo-600 text-white border-indigo-600"
-                        : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100"
+                    ${watch("role") === role
+                      ? "bg-indigo-600 text-white border-indigo-600"
+                      : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100"
                     }
                   `}
                 >

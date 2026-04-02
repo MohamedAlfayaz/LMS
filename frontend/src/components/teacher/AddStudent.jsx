@@ -22,7 +22,10 @@ import {
 const schema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email"),
-  password: z.string().min(6, "Minimum 6 characters"),
+  password: z.string().min(6, "Minimum 6 characters")
+    .regex(/[A-Z]/, "At least one uppercase letter")
+    .regex(/[0-9]/, "At least one number")
+    .regex(/[@$!%*?&]/, "At least one special character"),
 });
 
 const AddStudent = () => {

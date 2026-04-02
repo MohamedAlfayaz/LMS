@@ -17,7 +17,7 @@ const TeacherDashboard = () => {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between mt-3 items-center">
         <h1 className="text-2xl font-bold">
           Teacher Dashboard
         </h1>

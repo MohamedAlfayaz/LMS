@@ -10,6 +10,7 @@ import {
 import MainLayout from "./components/MainLayout";
 
 /* Pages */
+import Welcome from "./pages/Welcome";
 import AdminPanel from "./pages/AdminPanel";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -20,7 +21,6 @@ import MyNotes from "./components/student/MyNotes";
 
 import TeacherArticles from "./components/teacher/ArticlesTable";
 import TeacherAnalytics from "./components/teacher/ChartsSection";
-// import AddStudent from "./components/teacher/AddStudent";
 
 import ArticleReader from "./components/student/ArticleReader";
 import CreateArticle from "./components/teacher/CreateArticle";
@@ -62,7 +62,8 @@ const App = () => {
     <Router>
       <Routes>
 
-        {/* ---------- PUBLIC (NO LAYOUT) ---------- */}
+        {/* ---------- PUBLIC ---------- */}
+        <Route path="/" element={<Welcome />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -124,17 +125,6 @@ const App = () => {
             </TeacherRoute>
           }
         />
-
-        {/* <Route
-          path="/teacher/add-student"
-          element={
-            <TeacherRoute>
-              <MainLayout>
-                <AddStudent />
-              </MainLayout>
-            </TeacherRoute>
-          }
-        /> */}
 
         <Route
           path="/teacher/edit-article/:id"
@@ -203,9 +193,8 @@ const App = () => {
           }
         />
 
-        {/* ---------- DEFAULT ---------- */}
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="*" element={<Navigate to="/login" />} />
+        {/* ---------- FALLBACK ---------- */}
+        <Route path="*" element={<Navigate to="/" />} />
 
       </Routes>
     </Router>

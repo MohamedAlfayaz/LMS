@@ -1,29 +1,31 @@
-import React, { useState } from "react";
-import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
+import React from "react";
+import { FiEdit2, FiTrash2, FiPlus, FiBook, FiSearch } from "react-icons/fi";
 import { useArticles } from "../../hooks/useArticles";
 import { useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
+import Input from "../ui/Input";
+import { useTable } from "../../hooks/useTable"; // 🔥 NEW
 
 const ArticlesTable = () => {
-  const { data: articles = [], isLoading, deleteArticle, updateArticle } = useArticles();
+  const { data: articles = [], isLoading, deleteArticle } = useArticles();
   const navigate = useNavigate();
-  const [editingArticle, setEditingArticle] = useState(null);
+
+  // 🔥 GLOBAL STATE (Redux)
+  const {
+    search,
+    category,
+    page,
+    totalPages,
+    filtered,
+    paginated,
+    setSearch,
+    setCategory,
+    setPage,
+  } = useTable(articles, "title", "category");
 
   const handleDelete = (id) => {
     if (!window.confirm("Delete this article?")) return;
     deleteArticle(id);
-  };
-
-  const handleUpdate = () => {
-    if (!editingArticle?._id) return;
-
-    updateArticle({
-      _id: editingArticle._id,
-      title: editingArticle.title,
-      category: editingArticle.category,
-    });
-
-    setEditingArticle(null);
   };
 
   if (isLoading) {
@@ -35,58 +37,101 @@ const ArticlesTable = () => {
   }
 
   return (
-    <div className="bg-white p-6  rounded-2xl shadow border border-gray-100">
+    <div className="bg-white p-6 rounded-2xl mt-3 shadow border border-gray-100">
 
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Articles</h2>
-          <p className="text-sm text-gray-400">{articles.length} total articles</p>
+      {/* 🔥 HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+            <FiBook />
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800">Articles</h2>
+            <p className="text-xs text-gray-500">
+              {filtered.length} results
+            </p>
+          </div>
         </div>
 
-        <Button
-          onClick={() => navigate("/teacher/create-article")}
-          variant="primary"
-        >
-          <FiPlus />
-          Create Article
-        </Button>
+        {/* 🔥 SEARCH + FILTER */}
+        <div className="flex flex-wrap gap-2 items-center">
+
+          {/* SEARCH */}
+          <Input
+            label="Search"
+            icon={<FiSearch />}
+            type="text"
+            placeholder="Search articles..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          {/* FILTER */}
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="px-3 py-3.5 text-sm border rounded-lg"
+          >
+            <option value="All">All</option>
+            <option value="Tamil">Tamil</option>
+            <option value="English">English</option>
+            <option value="Math">Math</option>
+            <option value="Science">Science</option>
+            <option value="History">History</option>
+            <option value="Art">Art</option>
+            <option value="Computer">Computer</option>
+          </select>
+
+          <Button
+            onClick={() => navigate("/teacher/create-article")}
+            className="flex items-center gap-2"
+          >
+            <FiPlus />
+            Create
+          </Button>
+
+        </div>
       </div>
 
-      {/* EMPTY STATE */}
-      {articles.length === 0 && (
+      {/* EMPTY */}
+      {filtered.length === 0 && (
         <div className="text-center py-16 text-gray-400">
           No articles found 🚫
         </div>
       )}
 
-      {/* TABLE / CARD RESPONSIVE */}
-      {articles.length > 0 && (
+      {filtered.length > 0 && (
         <>
-          {/* ================= DESKTOP + TABLET TABLE ================= */}
+          {/* 🔥 DESKTOP TABLE */}
           <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full border-separate border-spacing-y-2">
+
               <thead>
-                <tr className="text-left text-gray-500 text-sm border-b">
-                  <th className="py-3">Title</th>
-                  <th>Category</th>
-                  <th>Date</th>
-                  <th className="text-right">Actions</th>
+                <tr className="text-gray-500 text-xs uppercase">
+                  <th className="text-left px-14">Article</th>
+                  <th className="text-left px-4">Category</th>
+                  <th className="text-left px-4">Date</th>
+                  <th className="text-right pr-10">Actions</th>
                 </tr>
               </thead>
 
               <tbody>
-                {articles.map((article) => (
+                {paginated.map((article) => (
                   <tr
                     key={article._id}
-                    className="border-b hover:bg-gray-50 transition"
+                    className="bg-white shadow-sm hover:shadow-md transition rounded-xl"
                   >
-                    <td className="py-4 font-medium text-gray-800">
-                      {article.title}
+
+                    <td className="px-4 py-4">
+                      <p className="font-semibold text-gray-800">
+                        {article.title}
+                      </p>
                     </td>
 
                     <td>
-                      <span className="px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                      <span className="px-3 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full">
                         {article.category}
                       </span>
                     </td>
@@ -95,7 +140,7 @@ const ArticlesTable = () => {
                       {new Date(article.createdAt).toLocaleDateString()}
                     </td>
 
-                    <td className="text-right">
+                    <td className="pr-6">
                       <div className="flex justify-end gap-2">
                         <Button
                           onClick={() => navigate(`/teacher/edit-article/${article._id}`)}
@@ -112,117 +157,104 @@ const ArticlesTable = () => {
                         </Button>
                       </div>
                     </td>
+
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {/* ================= MOBILE CARD VIEW ================= */}
+          {/* 🔥 MOBILE */}
           <div className="md:hidden space-y-4">
-            {articles.map((article) => (
+            {paginated.map((article) => (
               <div
                 key={article._id}
-                className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-4"
+                className="bg-white rounded-2xl p-4 shadow-md border border-gray-100"
               >
-                {/* TOP SECTION */}
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold text-gray-900 text-base leading-tight">
-                    {article.title}
-                  </h3>
 
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-lg">
+                      {article.title}
+                    </h3>
+                  </div>
+
+                  <span className="text-sm text-gray-400">
                     {new Date(article.createdAt).toLocaleDateString()}
                   </span>
                 </div>
 
-                {/* CATEGORY */}
-                <div className="mb-4">
-                  <span className="inline-block px-3 py-1 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-full">
+                <div className="mt-3">
+                  <span className="px-3 py-1 text-xs bg-indigo-50 text-indigo-600 rounded-full">
                     {article.category}
                   </span>
                 </div>
 
-                {/* DIVIDER */}
-                <div className="border-t border-gray-100 mb-3"></div>
+                <div className="border-t my-3"></div>
 
-                {/* ACTIONS */}
-                <div className="flex justify-between items-center">
-                  <p className="text-xs text-gray-400">Manage Article</p>
+                <div className="flex justify-between gap-2">
+                  <Button
+                    onClick={() => navigate(`/teacher/edit-article/${article._id}`)}
+                    variant="warning"
+                  >
+                    <FiEdit2 />
+                    Edit
+                  </Button>
 
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => navigate(`/teacher/edit-article/${article._id}`)}
-                      variant="warning"
-                    >
-                      <FiEdit2 size={16} />
-                    </Button>
-
-                    <Button
-                      onClick={() => handleDelete(article._id)}
-                      variant="danger"
-                    >
-                      <FiTrash2 size={16} />
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={() => handleDelete(article._id)}
+                    variant="danger"
+                  >
+                    <FiTrash2 />
+                    Delete
+                  </Button>
                 </div>
+
               </div>
             ))}
+          </div>
+
+          {/* 🔥 PAGINATION */}
+          <div className="flex justify-center items-center gap-2 mt-6">
+
+            <Button
+              onClick={() => setPage(page - 1)}
+              disabled={page === 1}
+              variant="lightgray"
+            >
+              Prev
+            </Button>
+
+            {[...Array(totalPages)].map((_, i) => {
+              const pageNum = i + 1;
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => setPage(pageNum)}
+                  className={`px-3 py-1 text-xs border rounded-lg
+                    ${page === pageNum
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white hover:bg-gray-100"
+                    }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            <Button
+              onClick={() => setPage(page + 1)}
+              disabled={page === totalPages}
+              variant="lightgray"
+            >
+              Next
+            </Button>
+
           </div>
         </>
       )}
 
-      {/* MODAL */}
-      {editingArticle && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md">
-
-            <h3 className="text-lg font-semibold mb-4">Edit Article</h3>
-
-            <input
-              type="text"
-              value={editingArticle.title}
-              onChange={(e) =>
-                setEditingArticle({ ...editingArticle, title: e.target.value })
-              }
-              className="w-full border px-4 py-2 rounded-lg mb-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-
-            <select
-              value={editingArticle.category}
-              onChange={(e) =>
-                setEditingArticle({ ...editingArticle, category: e.target.value })
-              }
-              className="w-full border px-4 py-2 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
-            >
-              <option value="Tamil">Tamil</option>
-              <option value="English">English</option>
-              <option value="Math">Math</option>
-              <option value="Science">Science</option>
-              <option value="History">History</option>
-              <option value="Art">Art</option>
-              <option value="Computer">Computer</option>
-            </select>
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setEditingArticle(null)}
-                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleUpdate}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-              >
-                Update
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
     </div>
   );
 };
