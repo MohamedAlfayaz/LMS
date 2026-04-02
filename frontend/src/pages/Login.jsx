@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useLogin } from "../hooks/useLogin";
+import { useLogin } from "../hooks/useAuth";
 import { jwtDecode } from "jwt-decode";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../store/authSlice";
@@ -132,7 +132,6 @@ const Login = () => {
               <p className="text-sm">🎯 Achieve goals</p>
             </div>
           </div>
-
         </div>
 
         {/* RIGHT SIDE */}
@@ -238,10 +237,7 @@ const Login = () => {
                     "Login"
                   )}
                 </Button>
-
               </div>
-
-
             </form>
 
             {/* REGISTER */}
@@ -254,7 +250,6 @@ const Login = () => {
                 Register
               </Link>
             </p>
-
           </div>
         </div>
       </div>

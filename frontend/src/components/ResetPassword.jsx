@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import API from "../api/api";
+import { useResetPassword } from "../hooks/useAuth";
 
 import { FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
 import Button from "./ui/Button";
@@ -28,6 +28,8 @@ const ResetPassword = () => {
   const { token } = useParams();
   const navigate = useNavigate();
 
+  const { mutateAsync, isPending } = useResetPassword();
+
   const [showPassword, setShowPassword] = useState(false);
   const [show, setShow] = useState(false);
 
@@ -35,7 +37,7 @@ const ResetPassword = () => {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isValid, isSubmitting },
+    formState: { errors, isValid },
   } = useForm({
     resolver: zodResolver(schema),
     mode: "onChange",
@@ -43,16 +45,17 @@ const ResetPassword = () => {
 
   const onSubmit = async (data) => {
     try {
-      const res = await API.post(
-        `/auth/reset-password/${token}`,
-        { password: data.password }
-      );
+      await mutateAsync({
+        token,
+        password: data.password,
+      });
 
       setTimeout(() => {
         navigate("/login");
       }, 1500);
 
     } catch (err) {
+      console.log("FULL ERROR 👉", err);
       setError("root", {
         message: err?.response?.data?.message || "Reset failed",
       });
@@ -97,11 +100,11 @@ const ResetPassword = () => {
                 Enter a new password
               </p>
             </div>
-            <h2 className="text-2xl text-center font-bold mb-2">
+            <h2 className="text-2xl text-center font-bold">
               New Password
             </h2>
 
-            <p className="text-sm text-center text-gray-500 mb-4">
+            <p className="text-sm text-center text-gray-500 mb-2">
               Must be strong password
             </p>
 
@@ -170,13 +173,19 @@ const ResetPassword = () => {
               )}
 
               {/* BUTTON */}
-              <Button
-                type="submit"
-                disabled={!isValid || isSubmitting}
-                className="w-full"
-              >
-                {isSubmitting ? "Updating..." : "Reset Password"}
-              </Button>
+              <div className="flex justify-center items-center">
+                <Button
+                  type="submit"
+                  disabled={!isValid || isPending}
+                >
+                  {isPending ? (
+                    <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+                  ) : (
+                    "Reset Password"
+                  )}
+                </Button>
+              </div>
+
 
             </form>
 

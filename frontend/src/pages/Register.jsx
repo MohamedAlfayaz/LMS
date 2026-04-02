@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useRegister } from "../hooks/useLogin"
+import { useRegister } from "../hooks/useAuth"
 import { FaEye, FaEyeSlash, FaUserLock, FaMailBulk, FaUser, FaUserPlus } from "react-icons/fa";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input"

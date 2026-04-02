@@ -1,4 +1,3 @@
-import React from "react";
 import { useAnalytics } from "../../hooks/useAnalytics";
 import { BookOpen, Users, BarChart3 } from "lucide-react";
 import StatsCard from "../ui/StatsCard";

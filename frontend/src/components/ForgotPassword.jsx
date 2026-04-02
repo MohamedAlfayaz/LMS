@@ -1,5 +1,5 @@
 import React from "react";
-import API from "../api/api";
+import { useForgotPassword } from "../hooks/useAuth";
 import Button from "./ui/Button";
 import Input from "./ui/Input";
 import { FaMailBulk, FaKey, FaLink } from "react-icons/fa";
@@ -17,11 +17,13 @@ const schema = z.object({
 const ForgotPassword = () => {
   const navigate = useNavigate();
 
+  const { mutateAsync, isPending } = useForgotPassword();
+
   const {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isValid, isSubmitting },
+    formState: { errors, isValid },
   } = useForm({
     resolver: zodResolver(schema),
     mode: "onChange",
@@ -29,14 +31,14 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data) => {
     try {
-      const res = await API.post("/auth/forgot-password", data);
+      const res = await mutateAsync(data);
 
-      // optional success handling
-      if (res.data.resetLink) {
-        const token = res.data.resetLink.split("/").pop();
+      if (res?.resetLink) {
+        const token = res.resetLink.split("/").pop();
         navigate(`/reset-password/${token}`);
+      } else {
+        alert("Reset link sent to email");
       }
-
     } catch (err) {
       setError("root", {
         message: err?.response?.data?.message || "Something went wrong",
@@ -103,9 +105,13 @@ const ForgotPassword = () => {
               <div className="flex justify-center">
                 <Button
                   type="submit"
-                  disabled={!isValid || isSubmitting}
+                  disabled={!isValid || isPending}
                 >
-                  {isSubmitting ? "Sending..." : "Send Reset Link"}
+                  {isPending ? (
+                    <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+                  ) : (
+                    "Send Reset Link"
+                  )}
                 </Button>
               </div>
 

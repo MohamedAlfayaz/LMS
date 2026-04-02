@@ -62,13 +62,24 @@ const AddStudent = () => {
     <div className="space-y-5">
 
       {/* Header */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-800">
-          Create Student
-        </h2>
-        <p className="text-sm text-gray-500">
-          Enter student details below
-        </p>
+      <div className="flex justify-center items-center gap-3 mb-2">
+
+        {/* ICON BOX */}
+        <div className="w-10 h-10 flex items-center justify-center rounded-xl 
+                  bg-green-100 text-green-600 shadow-sm">
+          <FaUserPlus />
+        </div>
+
+        {/* TEXT */}
+        <div>
+          <h2 className="text-lg font-semibold text-gray-800">
+            Create Student
+          </h2>
+          <p className="text-xs text-gray-500">
+            Add new student account details
+          </p>
+        </div>
+
       </div>
 
       {/* Server Error */}

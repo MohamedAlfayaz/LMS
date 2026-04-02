@@ -34,10 +34,12 @@ export default function CreateUserModal({ onClose, editUser }) {
     register,
     handleSubmit,
     reset,
+    watch,
+    getValues,
     formState: { errors, isValid },
   } = useForm({
     resolver: zodResolver(getSchema(isEdit)),
-    mode: "onChange", // 🔥 instant validation
+    mode: "onChange",
     defaultValues: {
       name: "",
       email: "",
@@ -58,12 +60,11 @@ export default function CreateUserModal({ onClose, editUser }) {
     }
   }, [editUser, reset]);
 
-  // ✅ Submit with safe payload
+  // ✅ Submit
   const onSubmit = async (form) => {
     try {
       const payload = { ...form };
 
-      // 🔥 CRITICAL FIX
       if (isEdit && !payload.password) {
         delete payload.password;
       }
@@ -84,36 +85,54 @@ export default function CreateUserModal({ onClose, editUser }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50">
 
-      <div className="bg-white p-6 rounded-2xl w-[400px]">
-        <h2 className="text-lg text-center font-semibold mb-4">
-          {isEdit ? "Edit User" : "Create User"}
-        </h2>
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 relative">
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        {/* HEADER */}
+        <div className="flex justify-center items-center gap-3 mb-5">
+          <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+            <FaUser />
+          </div>
+
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800">
+              {isEdit ? "Edit User" : "Create User"}
+            </h2>
+            <p className="text-xs text-gray-500">
+              {isEdit ? "Update user details" : "Add a new user"}
+            </p>
+          </div>
+        </div>
+
+        {/* FORM */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
           {/* NAME */}
-          <Input
-            label="Full Name"
-            icon={<FaUser />}
-            placeholder="Full Name"
-            {...register("name")}
-          />
-          {errors.name && (
-            <p className="text-red-500 text-xs">{errors.name.message}</p>
-          )}
+          <div>
+            <Input
+              label="Full Name"
+              icon={<FaUser />}
+              placeholder="Enter full name"
+              {...register("name")}
+            />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+            )}
+          </div>
 
           {/* EMAIL */}
-          <Input
-            label="Email"
-            icon={<FaMailBulk />}
-            placeholder="you@example.com"
-            {...register("email")}
-          />
-          {errors.email && (
-            <p className="text-red-500 text-xs">{errors.email.message}</p>
-          )}
+          <div>
+            <Input
+              label="Email"
+              icon={<FaMailBulk />}
+              placeholder="you@example.com"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+            )}
+          </div>
 
           {/* PASSWORD */}
           {!isEdit && (
@@ -143,17 +162,38 @@ export default function CreateUserModal({ onClose, editUser }) {
           )}
 
           {/* ROLE */}
-          <select
-            {...register("role")}
-            className="w-full border p-2 rounded"
-          >
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-          </select>
+          <div>
+            <label className="text-sm text-center text-gray-500 mb-1 block">Role</label>
+
+            <div className="flex gap-2">
+              {["student", "teacher"].map((role) => (
+                <button
+                  type="button"
+                  key={role}
+                  onClick={() => reset({ ...getValues(), role })}
+                  className={`flex-1 py-2 rounded-lg text-xs font-medium border transition
+                    ${
+                      watch("role") === role
+                        ? "bg-indigo-600 text-white border-indigo-600"
+                        : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100"
+                    }
+                  `}
+                >
+                  {role}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* ACTIONS */}
-          <div className="flex justify-end gap-2">
-            <Button type="button" onClick={onClose} variant="secondary">
+          <div className="flex justify-end gap-2 pt-2">
+
+            <Button
+              type="button"
+              onClick={onClose}
+              variant="secondary"
+              className="px-4"
+            >
               Cancel
             </Button>
 
@@ -163,11 +203,13 @@ export default function CreateUserModal({ onClose, editUser }) {
                 createUser.isLoading ||
                 updateUser.isLoading
               }
+              className="px-4"
             >
               {isEdit
                 ? (updateUser.isLoading ? "Updating..." : "Update")
                 : (createUser.isLoading ? "Creating..." : "Create")}
             </Button>
+
           </div>
 
         </form>
