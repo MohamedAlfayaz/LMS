@@ -1,60 +1,83 @@
 import React from "react";
-import { Trash2 } from "lucide-react";
-import { useStudentNotes, useHighlightMutations } from "../../hooks/useArticlesReader";
+import { Trash2, BookOpen, Quote } from "lucide-react";
+import {
+  useStudentNotes,
+  useHighlightMutations,
+} from "../../hooks/useArticlesReader";
 import Button from "../ui/Button";
-import { BookOpen } from "lucide-react"
+import Loading from "../ui/Loading";
 
 const MyNotes = () => {
-
   const { data: notes = [], isLoading } = useStudentNotes();
   const { deleteMutation } = useHighlightMutations();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
-    <div className="px-4">
-      <div className="max-w-5xl mx-auto">
-        <h2 className="flex items-center gap-3 text-4xl font-extrabold text-gray-800 my-5 tracking-tight">
-          <BookOpen size={30}/> My Notes
-        </h2>
+    <div className="min-h-screen bg-gray-50 px-4 py-6">
+      <div className="max-w-6xl mx-auto space-y-8">
+
+        {/* 🔥 HEADER */}
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-3 text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <BookOpen size={32} /> My Notes
+          </h2>
+
+          <div className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow">
+            {notes.length} Notes
+          </div>
+        </div>
+
+        {/* 🔥 EMPTY STATE */}
         {notes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center bg-white p-16 rounded-3xl shadow-md border border-dashed border-gray-300">
-            <p className="text-gray-500 text-lg">
-              You haven’t saved any highlights yet.
+          <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-dashed shadow-sm">
+
+            <div className="text-6xl mb-4">📝</div>
+
+            <p className="text-xl font-semibold text-gray-700">
+              No notes yet
             </p>
-            <p className="text-sm text-gray-400 mt-2">
-              Start reading articles and highlight something meaningful.
+
+            <p className="text-sm text-gray-400 mt-2 text-center max-w-md">
+              You haven’t saved anything valuable yet. Start highlighting key
+              insights while reading.
             </p>
+
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-7">
+
             {notes.map((note) => (
               <div
                 key={note._id}
-                className="group bg-white p-6 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col justify-between"
+                className="group relative bg-white rounded-3xl p-6 shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-100 flex flex-col justify-between overflow-hidden"
               >
-                <div>
-                  {/* Article Tag */}
-                  <span className="inline-block text-xs font-semibold tracking-wide px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full">
+
+                {/* 🔥 HOVER GLOW */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-gradient-to-br from-indigo-50 to-transparent" />
+
+                <div className="relative z-10">
+
+                  {/* 🔹 ARTICLE TAG */}
+                  <span className="inline-block text-xs font-semibold px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full">
                     {note.articleId?.title || "Unknown Article"}
                   </span>
 
-                  {/* Highlight */}
-                  <div className="mt-4 border-l-4 border-yellow-400 pl-4">
-                    <p className="text-gray-800 text-base leading-relaxed italic line-clamp-4">
-                      “{note.text}”
+                  {/* 🔹 HIGHLIGHT */}
+                  <div className="mt-5 flex gap-3">
+
+                    <Quote className="text-indigo-400 mt-1 shrink-0" size={20} />
+
+                    <p className="text-gray-800 text-sm leading-relaxed italic line-clamp-4">
+                      {note.text}
                     </p>
                   </div>
 
-                  {/* Comment */}
+                  {/* 🔹 COMMENT */}
                   {note.comment && (
-                    <div className="mt-4 bg-gray-50 p-3 rounded-xl">
+                    <div className="mt-5 bg-gray-50 p-4 rounded-xl border border-gray-100">
                       <p className="text-sm text-gray-600 line-clamp-3">
                         <span className="font-semibold text-gray-800">
                           Comment:
@@ -65,8 +88,9 @@ const MyNotes = () => {
                   )}
                 </div>
 
-                {/* Bottom Section */}
-                <div className="flex justify-between items-center mt-6">
+                {/* 🔥 FOOTER */}
+                <div className="relative z-10 flex justify-between items-center mt-6 pt-4 border-t">
+
                   {note.createdAt && (
                     <p className="text-xs text-gray-400">
                       {new Date(note.createdAt).toLocaleDateString()}
@@ -76,12 +100,15 @@ const MyNotes = () => {
                   <Button
                     onClick={() => deleteMutation.mutate(note._id)}
                     variant="danger"
+                    className="opacity-70 hover:opacity-100 transition"
                   >
                     <Trash2 size={18} />
                   </Button>
+
                 </div>
               </div>
             ))}
+
           </div>
         )}
       </div>

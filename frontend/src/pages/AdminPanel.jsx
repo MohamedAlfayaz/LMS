@@ -6,7 +6,7 @@ import CreateUserModal from "../components/admin/CreateUserModal";
 import StatsCard from "../components/ui/StatsCard";
 import Button from "../components/ui/Button";
 
-import { Users, Shield, Activity, GraduationCap, Plus } from "lucide-react";
+import { Users, Shield, Activity, GraduationCap } from "lucide-react";
 
 export default function AdminDashboard() {
 
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
           }}
           className="flex items-center gap-2"
         >
-          <Plus size={16} />
+          <Users size={16} />
           Create User
         </Button>
       </div>

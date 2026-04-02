@@ -15,6 +15,7 @@ import {
 
 import { useDeleteUser } from "../../hooks/useUsers";
 import { useTable } from "../../hooks/useTable"; // 🔥 NEW
+import Loading from "../ui/Loading";
 
 const roles = [
   { key: "All", label: "All", icon: <FiUsers /> },
@@ -117,7 +118,9 @@ export default function UsersTable({ users, loading }) {
 
       {/* LOADING */}
       {loading ? (
-        <div className="p-6">Loading...</div>
+        <div className="p-6">
+         <Loading />
+        </div>
       ) : filtered.length === 0 ? (
         <div className="p-6 text-center text-gray-500">
           No users found 🚫

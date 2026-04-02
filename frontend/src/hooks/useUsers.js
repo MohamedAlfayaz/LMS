@@ -4,7 +4,12 @@ import { getUsers, createUser, updateUser, deleteUser } from "../api/usersApi";
 export const useUsers = () => {
   return useQuery({
     queryKey: ["users"],
-    queryFn: getUsers
+    queryFn: getUsers,
+
+    retry: true,              // retry if backend fails
+    retryDelay: 2000,        // retry every 2 sec
+    refetchOnWindowFocus: true, // tab focus வந்தா refetch
+    refetchInterval: 5000,
   });
 };
 

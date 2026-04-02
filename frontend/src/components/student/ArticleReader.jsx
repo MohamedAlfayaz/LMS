@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import Button from "../ui/Button";
+import Loading from "../ui/Loading"
 
 import {
   useArticle,
@@ -88,11 +89,7 @@ const ArticleReader = () => {
 
   /* LOADING */
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin h-14 w-14 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
@@ -111,7 +108,7 @@ const ArticleReader = () => {
         <Button
           onClick={handleClose}
           variant="secondary"
-          >
+        >
           <ArrowLeft size={16} />
           Back
         </Button>
@@ -154,42 +151,42 @@ const ArticleReader = () => {
                     </div>
                   );
 
-                 case "video": {
-                    const isYoutube =
-                      block.value.includes("youtube.com") ||
-                      block.value.includes("youtu.be");
+                case "video": {
+                  const isYoutube =
+                    block.value.includes("youtube.com") ||
+                    block.value.includes("youtu.be");
 
-                    if (isYoutube) {
-                      const videoId =
-                        block.value.includes("youtu.be")
-                          ? block.value.split("youtu.be/")[1]
-                          : block.value.split("v=")[1]?.split("&")[0];
-
-                      return (
-                        <div key={i} className="flex justify-center">
-                          <iframe
-                            className="rounded-2xl shadow-md w-full max-w-3xl h-[400px]"
-                            src={`https://www.youtube.com/embed/${videoId}`}
-                            title="YouTube video"
-                            allowFullScreen
-                          />
-                        </div>
-                      );
-                    }
+                  if (isYoutube) {
+                    const videoId =
+                      block.value.includes("youtu.be")
+                        ? block.value.split("youtu.be/")[1]
+                        : block.value.split("v=")[1]?.split("&")[0];
 
                     return (
                       <div key={i} className="flex justify-center">
-                        <video
-                          controls
-                          preload="metadata"
-                          className="rounded-2xl shadow-md max-h-[500px] w-full"
-                        >
-                          <source src={block.value} type="video/mp4" />
-                          Your browser does not support the video tag.
-                        </video>
+                        <iframe
+                          className="rounded-2xl shadow-md w-full max-w-3xl h-[400px]"
+                          src={`https://www.youtube.com/embed/${videoId}`}
+                          title="YouTube video"
+                          allowFullScreen
+                        />
                       </div>
                     );
                   }
+
+                  return (
+                    <div key={i} className="flex justify-center">
+                      <video
+                        controls
+                        preload="metadata"
+                        className="rounded-2xl shadow-md max-h-[500px] w-full"
+                      >
+                        <source src={block.value} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  );
+                }
 
                 case "pdf":
                   return (
@@ -266,25 +263,25 @@ const ArticleReader = () => {
                     className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg relative"
                   >
                     <div className="flex items-center justify-between">
-                       <p className="italic text-gray-800">
-                      "{note.text}"
-                    </p>
-
-                    {note.comment && (
-                      <p className="text-sm text-gray-600">
-                        {note.comment}
+                      <p className="italic text-gray-800">
+                        "{note.text}"
                       </p>
-                    )}
 
-                    <Button
-                      onClick={() => deleteNote(note._id)}
-                      variant="danger"
-                    >
-                      <Trash2 size={18} />
-                    </Button>
+                      {note.comment && (
+                        <p className="text-sm text-gray-600">
+                          {note.comment}
+                        </p>
+                      )}
+
+                      <Button
+                        onClick={() => deleteNote(note._id)}
+                        variant="danger"
+                      >
+                        <Trash2 size={18} />
+                      </Button>
 
                     </div>
-                   
+
                   </div>
                 ))}
               </div>

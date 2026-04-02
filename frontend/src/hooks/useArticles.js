@@ -7,6 +7,11 @@ export const useArticles = () => {
     const articeQuery = useQuery({
         queryKey: ['article'],
         queryFn: getArticles,
+
+        retry: true,              // retry if backend fails
+        retryDelay: 2000,        // retry every 2 sec
+        refetchOnWindowFocus: true, // tab focus வந்தா refetch
+        refetchInterval: 5000,
     });
 
     const deleteMutation = useMutation({

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useAnalytics } from "../../hooks/useAnalytics";
 import { setAnalytics } from "../../store/analyticsSlice";
+import Loading from "../ui/Loading";
 
 import {
   Chart as ChartJS,
@@ -41,13 +42,27 @@ const ChartsSection = () => {
   }, [data, dispatch]);
 
   if (isLoading) {
+    return <Loading />
+  }
+
+  const isNoData =
+    !data ||
+    (
+      (!data.viewsPerArticle?.data?.length) &&
+      (!data.categoryDistribution?.data?.length) &&
+      (!data.studentProgress?.data?.length)
+    );
+
+  if (isNoData) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-2">
-        {[1,2,3].map((i) => (
-          <div key={i} className="h-96 bg-gray-200 animate-pulse rounded-3xl" />
-        ))}
+      <div className="flex flex-col items-center justify-center h-96 bg-white rounded-3xl shadow-sm">
+        <p className="text-gray-500 text-lg font-medium">
+          No Data Found
+        </p>
+        <p className="text-gray-400 text-sm mt-1">
+          Analytics data is empty or not available
+        </p>
       </div>
-      
     );
   }
 
@@ -98,13 +113,18 @@ const ChartsSection = () => {
     maintainAspectRatio: false
   };
 
-  return (
-    <div className="">
 
-      <div className="mb-2">
-        <h2 className="text-2xl font-bold text-gray-700">
+
+  return (
+    <div className="space-y-6 p-4">
+
+      <div >
+        <h2 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
           Analytics Overview
         </h2>
+        <p className="text-sm text-gray-400 mt-1">
+          Insights into student engagement & performance
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
