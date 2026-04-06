@@ -1,15 +1,46 @@
-import React from "react";
+import React, { useState } from "react";
 import { Trash2, BookOpen, Quote } from "lucide-react";
 import {
   useStudentNotes,
   useHighlightMutations,
 } from "../../hooks/useArticlesReader";
 import Button from "../ui/Button";
+import { toast } from "react-hot-toast";
 import Loading from "../ui/Loading";
+import ConfirmModal from "../ui/ConfirmModal"
 
 const MyNotes = () => {
   const { data: notes = [], isLoading } = useStudentNotes();
   const { deleteMutation } = useHighlightMutations();
+
+  const [deleteId, setDeleteId] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleDelete = async () => {
+    const loadingToast = toast.loading("Deleting note...");
+
+    try {
+      setLoading(true);
+
+      await deleteMutation.mutateAsync(deleteId);
+
+      toast.success("Note deleted successfully", {
+        id: loadingToast,
+      });
+
+      setDeleteId(null);
+
+    } catch (err) {
+      console.error(err);
+
+      toast.error(
+        err?.response?.data?.message || "Delete failed",
+        { id: loadingToast }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (isLoading) {
     return <Loading />;
@@ -98,7 +129,7 @@ const MyNotes = () => {
                   )}
 
                   <Button
-                    onClick={() => deleteMutation.mutate(note._id)}
+                    onClick={() => setDeleteId(note._id)}
                     variant="danger"
                     className="opacity-70 hover:opacity-100 transition"
                   >
@@ -111,6 +142,16 @@ const MyNotes = () => {
 
           </div>
         )}
+
+        <ConfirmModal
+          isOpen={!!deleteId}
+          title="Delete Note"
+          message="Are you sure you want to delete this note?"
+          confirmText="Delete"
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteId(null)}
+          loading={loading}
+        />
       </div>
     </div>
   );

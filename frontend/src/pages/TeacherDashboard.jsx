@@ -22,6 +22,8 @@ const TeacherDashboard = () => {
 
   const summary = data?.summary || {};
 
+  // console.log("Sum", summary)
+
   const isNoData =
     !data ||
     !data.summary ||
@@ -106,10 +108,10 @@ const TeacherDashboard = () => {
         </div>
 
         {/* 🔥 MAIN GRID (IMPORTANT) */}
-        <div className="grid lg:grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-6">
 
           {/* 📊 CHARTS */}
-          <div className="lg:col-span-2 bg-white rounded-3xl shadow-md p-2 border border-gray-100">
+          <div className="bg-white rounded-3xl shadow-md p-2 border border-gray-100">
             <ChartsSection />
           </div>
         </div>

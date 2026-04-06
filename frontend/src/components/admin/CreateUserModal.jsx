@@ -7,7 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import Button from "../ui/Button";
 import Input from "../ui/Input";
-import { FaEye, FaEyeSlash, FaKey, FaMailBulk, FaUser } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaKey, FaMailBulk, FaUser, FaUserPlus } from "react-icons/fa";
+import toast from "react-hot-toast";
+import { FiX, FiEdit2 } from "react-icons/fi";
 
 // ✅ Dynamic schema
 const getSchema = (isEdit) =>
@@ -66,6 +68,8 @@ export default function CreateUserModal({ onClose, editUser }) {
   // ✅ Submit
   const onSubmit = async (form) => {
     try {
+
+      const loadingToast = toast.loading("Processing...");
       const payload = { ...form };
 
       if (isEdit && !payload.password) {
@@ -77,15 +81,26 @@ export default function CreateUserModal({ onClose, editUser }) {
           id: editUser._id,
           form: payload,
         });
+
+        toast.success("User updated successfully", { id: loadingToast });
       } else {
         await createUser.mutateAsync(payload);
+
+        toast.success("User created successfully", { id: loadingToast });
       }
 
       onClose();
     } catch (err) {
       console.error(err);
+
+      toast.error(
+        err?.response?.data?.message || "Something went wrong",
+        { id: loadingToast }
+      );
     }
   };
+
+  const isLoading = createUser.isLoading || updateUser.isLoading;
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -194,22 +209,24 @@ export default function CreateUserModal({ onClose, editUser }) {
               type="button"
               onClick={onClose}
               variant="secondary"
-              className="px-4"
             >
+              <FiX />
               Cancel
             </Button>
 
             <Button
               disabled={
-                !isValid ||
-                createUser.isLoading ||
-                updateUser.isLoading
+                !isValid || isLoading
               }
-              className="px-4"
             >
-              {isEdit
-                ? (updateUser.isLoading ? "Updating..." : "Update")
-                : (createUser.isLoading ? "Creating..." : "Create")}
+              {isLoading ? (
+                <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+              ) : (
+                <>
+                  {isEdit ? <FiEdit2 size={18} /> : <FaUserPlus size={18} />}
+                  {isEdit ? "Update" : "Create"}
+                </>
+              )}
             </Button>
 
           </div>

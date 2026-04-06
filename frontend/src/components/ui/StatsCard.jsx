@@ -32,7 +32,7 @@ const StatCard = ({
       </div>
 
       {/* VALUE */}
-      <h2 className="text-2xl font-bold text-gray-800">
+      <h2 className="text-2xl text-center font-bold text-gray-800">
         {value}
       </h2>
     </div>

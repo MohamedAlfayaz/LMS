@@ -16,36 +16,28 @@ router.get("/", auth, async (req, res) => {
         select: "title category"
       });
 
-    // If no records
-    if (!records || records.length === 0) {
-      return res.json({
-        totalRead: 0,
-        totalTime: 0,
-        favoriteCategory: "-",
-        categoryLabels: [],
-        categoryTimeData: [],
-        readingHistory: []
-      });
-    }
+    // ✅ filter valid
+    const validRecords = records.filter(r => r.articleId);
 
-    const totalRead = records.length;
+    // ✅ totals
+    const totalRead = validRecords.length;
 
-    const totalTime = records.reduce(
+    const totalTime = validRecords.reduce(
       (sum, r) => sum + (r.duration || 0),
       0
     );
 
-    // Category-based reading time
+    // ✅ category
     const categoryMap = {};
 
-    records.forEach((r) => {
-      if (!r.articleId) return; // prevent crash if article deleted
-
+    validRecords.forEach((r) => {
       const category = r.articleId.category || "Unknown";
 
       categoryMap[category] =
         (categoryMap[category] || 0) + (r.duration || 0);
     });
+
+
 
     const categoryLabels = Object.keys(categoryMap);
     const categoryTimeData = Object.values(categoryMap);
@@ -60,14 +52,13 @@ router.get("/", auth, async (req, res) => {
       }
     });
 
-    const readingHistory = records
-      .filter(r => r.articleId)
-      .map((r) => ({
-        articleId: r.articleId._id,
-        title: r.articleId.title,
-        category: r.articleId.category,
-        duration: r.duration,
-      }));
+    // ✅ history
+    const readingHistory = validRecords.map((r) => ({
+      articleId: r.articleId._id,
+      title: r.articleId.title,
+      category: r.articleId.category,
+      duration: r.duration,
+    }));
 
     res.json({
       totalRead,

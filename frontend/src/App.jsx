@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 /* Layouts */
 import MainLayout from "./components/MainLayout";
@@ -60,9 +61,11 @@ const StudentRoute = ({ children }) => (
 const App = () => {
   return (
     <Router>
+      <Toaster position="top-right" reverseOrder={false} />
       <Routes>
 
         {/* ---------- PUBLIC ---------- */}
+        
         <Route path="/" element={<Welcome />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

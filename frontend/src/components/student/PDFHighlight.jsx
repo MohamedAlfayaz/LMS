@@ -1,39 +1,40 @@
 import React, { useState, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import workerSrc from "pdfjs-dist/build/pdf.worker?url";
+import { toast } from "react-hot-toast";
 
-pdfjs.GlobalWorkerOptions.workerSrc =workerSrc
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc
 
 const PDFHighlight = ({ url, onSaveHighlight, highlights = [] }) => {
   const [numPages, setNumPages] = useState(null);
   const containerRef = useRef();
 
   const handleMouseUp = () => {
-    const selection = window.getSelection();
-    const text = selection.toString().trim();
+  const selection = window.getSelection();
+  const text = selection.toString().trim();
 
-    if (!text) return;
+  if (!text) return;
 
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    const containerRect =
-      containerRef.current.getBoundingClientRect();
+  const range = selection.getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+  const containerRect =
+    containerRef.current.getBoundingClientRect();
 
-    // 🔥 relative position
-    const highlight = {
-      text,
-      rect: {
-        x: (rect.left - containerRect.left) / containerRect.width,
-        y: (rect.top - containerRect.top) / containerRect.height,
-        width: rect.width / containerRect.width,
-        height: rect.height / containerRect.height,
-      },
-    };
-
-    onSaveHighlight(highlight);
-
-    selection.removeAllRanges();
+  const highlight = {
+    text,
+    rect: {
+      x: (rect.left - containerRect.left) / containerRect.width,
+      y: (rect.top - containerRect.top) / containerRect.height,
+      width: rect.width / containerRect.width,
+      height: rect.height / containerRect.height,
+    },
   };
+
+  // 👉 ONLY send data to parent
+  onSaveHighlight(highlight);
+
+  selection.removeAllRanges();
+};
 
   return (
     <div

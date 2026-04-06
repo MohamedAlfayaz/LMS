@@ -1,10 +1,13 @@
 import React, { useMemo } from "react";
-import { useArticleAnalytics } from "../../hooks/useAnalytics";
+import { useArticleAnalytics, useStudentAnalytics } from "../../hooks/useAnalytics";
 import { FiBookOpen, FiClock, FiBarChart2 } from "react-icons/fi";
 import Loading from "../ui/Loading";
+import StatCard from "../ui/StatsCard";
 
 const StudentHistory = () => {
   const { data: history = [], isLoading } = useArticleAnalytics();
+  const { data: stats } = useStudentAnalytics();
+
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -36,6 +39,7 @@ const StudentHistory = () => {
     };
   }, [history]);
 
+
   // 🔥 LOADING
   if (isLoading) {
     return <Loading />;
@@ -63,40 +67,27 @@ const StudentHistory = () => {
 
         {/* 🔥 INSIGHTS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-
           {/* TOTAL */}
-          <div className="bg-white p-6 rounded-3xl shadow-md hover:shadow-xl transition">
-            <div className="flex items-center gap-2 text-indigo-600 font-semibold">
-              <FiClock />
-              Total Time
-            </div>
-            <h3 className="text-2xl font-bold mt-4 text-gray-900 text-center">
-              {formatTime(insights.totalTime || 0)}
-            </h3>
-          </div>
-
+          <StatCard
+            title="Total Time"
+            value={formatTime(insights.totalTime || 0)}
+            icon={FiClock}
+            accent="bg-indigo-600"
+          />
           {/* AVG */}
-          <div className="bg-white p-6 rounded-3xl shadow-md hover:shadow-xl transition">
-            <div className="flex items-center gap-2 text-green-600 font-semibold">
-              <FiBarChart2 />
-              Average Time
-            </div>
-            <h3 className="text-2xl font-bold mt-4 text-gray-900 text-center">
-              {formatTime(Math.floor(insights.avgTime || 0))}
-            </h3>
-          </div>
-
-          {/* CATEGORY */}
-          <div className="bg-white p-6 rounded-3xl shadow-md hover:shadow-xl transition">
-            <div className="flex items-center gap-2 text-pink-600 font-semibold">
-              <FiBookOpen />
-              Top Category
-            </div>
-            <h3 className="text-2xl font-bold mt-4 text-gray-900 text-center">
-              {insights.topCategory || "-"}
-            </h3>
-          </div>
-
+          <StatCard
+            title=" Average Time"
+            value={formatTime(insights.avgTime || 0)}
+            icon={FiBarChart2}
+            accent="bg-green-600"
+          />
+          {/* TOP CATEGORY */}
+          <StatCard
+            title="Top Category"
+            value={stats?.favoriteCategory || "-"}
+            icon={FiBookOpen}
+            accent="bg-pink-500"
+          />
         </div>
 
         {/* ACTIVITY HEADER */}

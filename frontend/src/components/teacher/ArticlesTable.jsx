@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { FiEdit2, FiTrash2, FiBook, FiSearch } from "react-icons/fi";
 import { useArticles } from "../../hooks/useArticles";
 import { useNavigate } from "react-router-dom";
@@ -6,10 +6,16 @@ import Button from "../ui/Button";
 import Input from "../ui/Input";
 import { useTable } from "../../hooks/useTable"; // 🔥 NEW
 import Loading from "../ui/Loading";
+import ConfirmModal from "../ui/ConfirmModal";
+import toast from "react-hot-toast";
+
 
 const ArticlesTable = () => {
   const { data: articles = [], isLoading, deleteArticle } = useArticles();
   const navigate = useNavigate();
+
+  const [deleteId, setDeleteId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // 🔥 GLOBAL STATE (Redux)
   const {
@@ -24,9 +30,30 @@ const ArticlesTable = () => {
     setPage,
   } = useTable(articles, "title", "category");
 
-  const handleDelete = (id) => {
-    if (!window.confirm("Delete this article?")) return;
-    deleteArticle(id);
+  const handleDelete = async () => {
+    const loadingToast = toast.loading("Deleting...");
+
+    try {
+      setLoading(true);
+
+      await deleteArticle(deleteId);
+
+      toast.success("Deleted successfully", {
+        id: loadingToast,
+      });
+
+      setDeleteId(null);
+
+    } catch (err) {
+      console.error(err);
+
+      toast.error(
+        err?.response?.data?.message || "Delete failed",
+        { id: loadingToast }
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -49,9 +76,14 @@ const ArticlesTable = () => {
               <h2 className="text-2xl font-bold text-gray-800">
                 Articles
               </h2>
-              <p className="text-sm text-gray-400">
-                {filtered.length} results
-              </p>
+              <div className="flex gap-2">
+                <p className="flex text-xs text-gray-400">
+                  {filtered.length} {filtered.length === 0 || filtered.length === 1 ? "article" : "articles"}
+                </p>
+                <p className="flex text-xs text-gray-500">
+                  {totalPages} {totalPages === 0 || totalPages === 1 ? "page" : "pages"}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -151,7 +183,7 @@ const ArticlesTable = () => {
                           </Button>
 
                           <Button
-                            onClick={() => handleDelete(article._id)}
+                            onClick={() => setDeleteId(article._id)}
                             variant="danger"
                           >
                             <FiTrash2 />
@@ -203,7 +235,7 @@ const ArticlesTable = () => {
                     </Button>
 
                     <Button
-                      onClick={() => handleDelete(article._id)}
+                      onClick={() => setDeleteId(article._id)}
                       variant="danger"
                     >
                       <FiTrash2 />
@@ -256,6 +288,15 @@ const ArticlesTable = () => {
           </>
         )}
 
+        <ConfirmModal
+          isOpen={!!deleteId}
+          title="Delete Article"
+          message="Are you sure you want to delete this article?"
+          confirmText="Delete"
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteId(null)}
+          loading={loading}
+        />
       </div>
     </div>
   );

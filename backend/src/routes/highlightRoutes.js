@@ -29,7 +29,24 @@ router.get("/", auth, async (req, res) => {
       studentId: req.user.id,
     }).populate("articleId", "title");
 
-    res.json(highlights);
+    // ✅ Only return valid highlights
+    const valid = highlights.filter(h => h.articleId);
+
+    res.json(valid);
+    
+router.get("/:id", auth, async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+
+    if (!article) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    res.json(article);
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+});
   } catch (err) {
     res.status(500).json({ message: "Fetch highlights failed" });
   }
@@ -38,7 +55,15 @@ router.get("/", auth, async (req, res) => {
 // Delete Highlight
 router.delete("/:id", auth, async (req, res) => {
   try {
-    await Highlight.findByIdAndDelete(req.params.id);
+    const deleted = await Highlight.findOneAndDelete({
+      _id: req.params.id,
+      studentId: req.user.id, // 🔥 important
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Highlight not found or unauthorized" });
+    }
+
     res.json({ message: "Deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: "Delete failed" });

@@ -4,10 +4,19 @@ const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+const Article = require("../models/Article");
+
 router.post("/", auth, async (req, res) => {
   const { articleId, duration } = req.body;
 
   try {
+    // 🔥 Check article exists
+    const articleExists = await Article.exists({ _id: articleId });
+
+    if (!articleExists) {
+      return res.status(400).json({ message: "Invalid article" });
+    }
+
     let record = await Analytics.findOne({
       articleId,
       studentId: req.user.id,
@@ -27,11 +36,10 @@ router.post("/", auth, async (req, res) => {
     }
 
     res.json(record);
+
   } catch (err) {
-    console.error("Tracking error:", err);
     res.status(500).json({ message: "Tracking failed" });
   }
 });
-
 
 module.exports = router;

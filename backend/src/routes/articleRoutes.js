@@ -3,6 +3,8 @@ const Article = require("../models/Article");
 const auth = require("../middleware/authMiddleware");
 const role = require("../middleware/roleMiddleware");
 const upload = require("../middleware/upload");
+const Highlight = require("../models/Highlight");
+const Analytics = require("../models/Analytics");
 
 const router = express.Router();
 
@@ -55,7 +57,14 @@ router.get("/", auth, async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
 
-    const articles = await Article.find()
+    let filter = {};
+
+    // 🔒 If teacher → only their articles
+    if (req.user.role === "teacher") {
+      filter.createdBy = req.user.id;
+    }
+
+    const articles = await Article.find(filter)
       .skip((page - 1) * limit)
       .limit(limit);
 
@@ -72,6 +81,14 @@ router.get("/:id", auth, async (req, res) => {
 
     if (!article) {
       return res.status(404).json({ message: "Not found" });
+    }
+
+    // 🔒 Restrict access
+    if (
+      req.user.role === "teacher" &&
+      article.createdBy.toString() !== req.user.id
+    ) {
+      return res.status(403).json({ message: "Not allowed" });
     }
 
     res.json(article);
@@ -103,10 +120,13 @@ router.put("/:id", auth, role("teacher"), async (req, res) => {
   }
 });
 
+
 /* Delete */
 router.delete("/:id", auth, role("teacher"), async (req, res) => {
   try {
-    const article = await Article.findById(req.params.id);
+    const articleId = req.params.id;
+
+    const article = await Article.findById(articleId);
 
     if (!article) return res.status(404).json({ message: "Not found" });
 
@@ -114,9 +134,15 @@ router.delete("/:id", auth, role("teacher"), async (req, res) => {
       return res.status(403).json({ message: "Not allowed" });
     }
 
-    await article.deleteOne();
+    // 🔥 DELETE RELATED DATA
+    await Promise.all([
+      Highlight.deleteMany({ articleId }),
+      Analytics.deleteMany({ articleId }),
+      article.deleteOne(),
+    ]);
 
-    res.json({ message: "Deleted" });
+    res.json({ message: "Article + related data deleted" });
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from "react-redux";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { setSearch, setCategory, setPage } from "../store/highlightSlice";
 
 export const useTable = (
@@ -26,7 +26,7 @@ export const useTable = (
         category === "All"
           ? true
           : String(item?.[filterKey]).toLowerCase() ===
-            category.toLowerCase();
+          category.toLowerCase();
 
       return matchSearch && matchCategory;
     });
@@ -44,6 +44,13 @@ export const useTable = (
 
   // 🔥 SAFE PAGE HANDLING (edge case fix)
   const safePage = page > totalPages ? totalPages : page;
+
+  // 🔥 AUTO FIX PAGE WHEN DATA CHANGES
+  useEffect(() => {
+    if (page > totalPages) {
+      dispatch(setPage(totalPages));
+    }
+  }, [page, totalPages, dispatch]);
 
   return {
     search,

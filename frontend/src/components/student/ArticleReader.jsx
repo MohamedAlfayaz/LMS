@@ -1,6 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import ConfirmModal from "../ui/ConfirmModal";
+
 import {
   ArrowLeft,
   BookOpen,
@@ -35,6 +38,10 @@ const ArticleReader = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const [deleteId, setDeleteId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [pdfHighlight, setPdfHighlight] = useState(null);
+
   const { data: article, isLoading } = useArticle(id);
   const { data: notes = [] } = useHighlights(id);
 
@@ -68,24 +75,67 @@ const ArticleReader = () => {
     if (text) dispatch(setSelectedText(text));
   };
 
-  /* SAVE NOTE */
-  const saveNote = () => {
+
+  const saveNote = async () => {
     if (!selectedText) return;
-    createMutation.mutate({
-      articleId: id,
-      text: selectedText,
-      comment: noteComment
-    });
-    dispatch(clearHighlight());
-    window.getSelection().removeAllRanges();
+
+    const loadingToast = toast.loading("Saving note...");
+
+    try {
+      await createMutation.mutateAsync({
+        articleId: id,
+        text: selectedText,
+        comment: noteComment,
+        ...(pdfHighlight && {
+          type: "pdf",
+          rect: pdfHighlight.rect,
+        }),
+      });
+
+      toast.success("Note saved successfully", {
+        id: loadingToast,
+      });
+
+      dispatch(clearHighlight());
+      setPdfHighlight(null);
+      window.getSelection().removeAllRanges();
+
+    } catch (err) {
+      console.error(err);
+
+      toast.error("Failed to save note", {
+        id: loadingToast,
+      });
+    }
   };
 
   /* DELETE NOTE */
-  const deleteNote = (noteId) => {
-    deleteMutation.mutate(noteId);
+  const handleDelete = async () => {
+    const loadingToast = toast.loading("Deleting note...");
+
+    try {
+      setLoading(true);
+
+      await deleteMutation.mutateAsync(deleteId);
+
+      toast.success("Note deleted", {
+        id: loadingToast,
+      });
+
+      setDeleteId(null);
+
+    } catch (err) {
+      console.error(err);
+
+      toast.error("Delete failed", {
+        id: loadingToast,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleClose = () => navigate(-1);
+  const handleClose = () => navigate("/student/articles");
 
   /* LOADING */
   if (isLoading) {
@@ -198,13 +248,11 @@ const ArticleReader = () => {
                         url={block.value}
                         highlights={notes.filter(n => n.type === "pdf")}
                         onSaveHighlight={(highlight) => {
-                          createMutation.mutate({
-                            articleId: id,
-                            type: "pdf",
-                            text: highlight.text,
-                            rect: highlight.rect,
-                            blockIndex: i,
-                          });
+                          dispatch(setSelectedText(highlight.text));
+                          dispatch(setNoteComment(""));
+
+                          // store rect separately (you must add state)
+                          setPdfHighlight(highlight);
                         }}
                       />
                     </div>
@@ -274,7 +322,7 @@ const ArticleReader = () => {
                       )}
 
                       <Button
-                        onClick={() => deleteNote(note._id)}
+                        onClick={() => setDeleteId(note._id)}
                         variant="danger"
                       >
                         <Trash2 size={18} />
@@ -337,6 +385,16 @@ const ArticleReader = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteId}
+        title="Delete Note"
+        message="Are you sure you want to delete this note?"
+        confirmText="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={loading}
+      />
     </div>
   );
 };

@@ -1,5 +1,7 @@
 const express = require("express");
 const User = require("../models/User");
+const Highlight = require("../models/Highlight");
+const Analytics = require("../models/Analytics");
 const protect = require("../middleware/authMiddleware");
 const authorize = require("../middleware/roleMiddleware");
 
@@ -101,13 +103,16 @@ router.put(
 );
 
 /* ---------------- DELETE USER (ADMIN ONLY) ---------------- */
+
 router.delete(
   "/users/:id",
   protect,
   authorize("admin"),
   async (req, res) => {
     try {
-      const user = await User.findById(req.params.id);
+      const userId = req.params.id;
+
+      const user = await User.findById(userId);
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -118,11 +123,17 @@ router.delete(
         return res.status(400).json({ message: "Cannot delete admin" });
       }
 
-      await user.deleteOne();
+      // 🔥 DELETE ALL RELATED DATA
+      await Promise.all([
+        Highlight.deleteMany({ studentId: userId }),
+        Analytics.deleteMany({ studentId: userId }),
+        user.deleteOne(),
+      ]);
 
-      res.json({ message: "User deleted successfully" });
+      res.json({ message: "User + related data deleted successfully" });
 
     } catch (err) {
+      console.error("Delete user error:", err);
       res.status(500).json({ message: err.message });
     }
   }

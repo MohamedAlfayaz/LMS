@@ -32,19 +32,28 @@ ChartJS.register(
 );
 
 const ChartsSection = () => {
-
   const dispatch = useDispatch();
-
   const { data, isLoading } = useAnalytics();
 
   useEffect(() => {
-    if (data) dispatch(setAnalytics(data));
+    if (data) {
+      dispatch(setAnalytics(data));
+    }
   }, [data, dispatch]);
 
-  if (isLoading) {
-    return <Loading />
-  }
+  if (isLoading) return <Loading />;
 
+  // 🔥 TIME FORMAT FUNCTION (seconds → mm:ss)
+  const formatTime = (seconds) => {
+    if (!seconds && seconds !== 0) return "0:00";
+
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // 🔥 EMPTY CHECK
   const isNoData =
     !data ||
     (
@@ -66,23 +75,33 @@ const ChartsSection = () => {
     );
   }
 
+  // 🔥 BAR CHART (Views)
   const barData = {
-    labels: data.viewsPerArticle?.labels || [],
+    labels: data?.viewsPerArticle?.labels?.length
+      ? data.viewsPerArticle.labels
+      : ["No Data"],
     datasets: [
       {
         label: "Views",
-        data: data.viewsPerArticle?.data || [],
+        data: data?.viewsPerArticle?.data?.length
+          ? data.viewsPerArticle.data
+          : [0],
         backgroundColor: "#3B82F6",
-        borderRadius: 8
+        borderRadius: 10
       }
     ]
   };
 
+  // 🔥 PIE CHART (Categories)
   const pieData = {
-    labels: data.categoryDistribution?.labels || [],
+    labels: data?.categoryDistribution?.labels?.length
+      ? data.categoryDistribution.labels
+      : ["No Data"],
     datasets: [
       {
-        data: data.categoryDistribution?.data || [],
+        data: data?.categoryDistribution?.data?.length
+          ? data.categoryDistribution.data
+          : [1],
         backgroundColor: [
           "#6366F1",
           "#22C55E",
@@ -94,12 +113,13 @@ const ChartsSection = () => {
     ]
   };
 
+  // 🔥 LINE CHART (Reading Time)
   const lineData = {
-    labels: data.studentProgress?.labels || [],
+    labels: data?.studentProgress?.labels || [],
     datasets: [
       {
-        label: "Reading Progress %",
-        data: data.studentProgress?.data || [],
+        label: "Reading Time",
+        data: data?.studentProgress?.data || [], // KEEP SECONDS
         borderColor: "#10B981",
         backgroundColor: "rgba(16,185,129,0.2)",
         fill: true,
@@ -108,56 +128,125 @@ const ChartsSection = () => {
     ]
   };
 
+  // 🔥 OPTIONS (WITH TIME FORMAT)
   const options = {
     responsive: true,
-    maintainAspectRatio: false
+    maintainAspectRatio: false,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const value = context.raw;
+            return `Reading Time: ${formatTime(value)}`;
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 3, // 🔥 important
+          callback: (value) => formatTime(value)
+        }
+      }
+    }
   };
 
-
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => `Views: ${context.parsed.y}`
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1
+        }
+      }
+    }
+  };
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="p-6 space-y-8 bg-gray-50">
 
-      <div >
-        <h2 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-          Analytics Overview
+      {/* HEADER */}
+      <div className="flex flex-col gap-1">
+        <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+          Analytics Dashboard
         </h2>
-        <p className="text-sm text-gray-400 mt-1">
-          Insights into student engagement & performance
+        <p className="text-gray-500 text-sm">
+          Track performance, engagement, and insights in real-time
         </p>
       </div>
 
+      {/* GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">
-            Views per Article
-          </h3>
-          <div className="h-72">
-            <Bar data={barData} options={options} />
+        {/* BAR CHART */}
+        <div className="group relative bg-white/70 backdrop-blur-xl border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all duration-300">
+
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-md font-semibold text-gray-700">
+              Views per Article
+            </h3>
+            <span className="text-xs text-blue-500 font-medium bg-blue-100 px-2 py-1 rounded-full">
+              Traffic
+            </span>
           </div>
+
+          <div className="h-72">
+            <Bar data={barData} options={barOptions} />
+          </div>
+
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">
-            Category Distribution
-          </h3>
-          <div className="h-72">
-            <Pie data={pieData} options={options} />
+        {/* PIE CHART */}
+        <div className="group relative bg-white/70 backdrop-blur-xl border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all duration-300">
+
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-md font-semibold text-gray-700">
+              Category Split
+            </h3>
+            <span className="text-xs text-green-500 font-medium bg-green-100 px-2 py-1 rounded-full">
+              Distribution
+            </span>
           </div>
+
+          <div className="h-72">
+            <Pie data={pieData} options={{ responsive: true }} />
+          </div>
+
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">
-            Student Reading Progress
-          </h3>
+        {/* LINE CHART */}
+        <div className="group relative bg-white/70 backdrop-blur-xl border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all duration-300">
+
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-md font-semibold text-gray-700">
+              Reading Time
+            </h3>
+            <span className="text-xs text-emerald-500 font-medium bg-emerald-100 px-2 py-1 rounded-full">
+              Engagement
+            </span>
+          </div>
+
           <div className="h-72">
             <Line data={lineData} options={options} />
           </div>
+
         </div>
 
       </div>
-
     </div>
   );
 };

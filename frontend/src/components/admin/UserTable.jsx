@@ -11,11 +11,14 @@ import {
   FiUser,
   FiUserCheck,
   FiUserPlus,
+  FiX
 } from "react-icons/fi";
 
 import { useDeleteUser } from "../../hooks/useUsers";
 import { useTable } from "../../hooks/useTable"; // 🔥 NEW
 import Loading from "../ui/Loading";
+import ConfirmModal from "../ui/ConfirmModal";
+import toast from "react-hot-toast";
 
 const roles = [
   { key: "All", label: "All", icon: <FiUsers /> },
@@ -27,8 +30,9 @@ const roles = [
 export default function UsersTable({ users, loading }) {
   const [editUser, setEditUser] = useState(null);
   const [open, setOpen] = useState(false);
-
   const deleteUser = useDeleteUser();
+
+  const [deleteId, setDeleteId] = useState(null);
 
   // 🔥 GLOBAL TABLE STATE
   const {
@@ -43,14 +47,24 @@ export default function UsersTable({ users, loading }) {
     setPage,
   } = useTable(users, "name", "role");
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete user?")) return;
+  const handleDelete = async () => {
+    const loadingToast = toast.loading("Deleting user...");
 
     try {
-      await deleteUser.mutateAsync(id);
+      await deleteUser.mutateAsync(deleteId);
+
+      toast.success("User deleted successfully", {
+        id: loadingToast,
+      });
+
+      setDeleteId(null); // close popup
     } catch (err) {
       console.error(err);
-      alert("Delete failed");
+
+      toast.error(
+        err?.response?.data?.message || "Delete failed",
+        { id: loadingToast }
+      );
     }
   };
 
@@ -63,17 +77,20 @@ export default function UsersTable({ users, loading }) {
       {/* HEADER */}
       <div className="p-4 border-b flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center gap-2">
           <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
             <FiUsers />
           </div>
 
-          <div>
+          <div className="flex md:flex-col sm:flex-row gap-2 sm:gap-0 items-center">
             <h2 className="text-lg font-semibold text-gray-800">
               Users
             </h2>
-            <p className="text-xs text-gray-500">
-              {filtered.length} users found
+            <p className="text-xs mt-1 sm:mt-0 text-gray-500">
+              {filtered.length} {filtered.length === 0 || filtered.length === 1 ? "user" : "users"}
+            </p>
+            <p className="text-xs mt-1 sm:mt-0 text-gray-500">
+              {totalPages} {totalPages === 0 || totalPages === 1 ? "page" : "pages"}
             </p>
           </div>
         </div>
@@ -119,7 +136,7 @@ export default function UsersTable({ users, loading }) {
       {/* LOADING */}
       {loading ? (
         <div className="p-6">
-         <Loading />
+          <Loading />
         </div>
       ) : filtered.length === 0 ? (
         <div className="p-6 text-center text-gray-500">
@@ -198,7 +215,7 @@ export default function UsersTable({ users, loading }) {
                         </Button>
 
                         <Button
-                          onClick={() => handleDelete(u._id)}
+                          onClick={() => setDeleteId(u._id)}
                           variant="danger">
                           <FiTrash2 />
                         </Button>
@@ -274,7 +291,7 @@ export default function UsersTable({ users, loading }) {
                   </Button>
 
                   <Button
-                    onClick={() => handleDelete(u._id)}
+                    onClick={() => setDeleteId(u._id)}
                     variant="danger"
                   >
                     <FiTrash2 size={14} />
@@ -338,6 +355,16 @@ export default function UsersTable({ users, loading }) {
           editUser={editUser}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteId}
+        title="Delete Article"
+        message="Are you sure you want to delete this article?"
+        confirmText="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={loading}
+      />
     </div>
   );
 }

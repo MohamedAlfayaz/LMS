@@ -8,6 +8,7 @@ import {
 } from "../../api/articleApi";
 import Button from "../ui/Button";
 import Input from "../ui/Input"
+import toast from "react-hot-toast";
 
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -104,9 +105,13 @@ const CreateArticle = () => {
     const error = validateArticle();
 
     if (error) {
-      alert(error); // you can replace with toast later
+      toast.error(error);
       return;
     }
+
+    const loadingToast = toast.loading(
+      id ? "Updating article..." : "Creating article..."
+    );
 
     try {
       const payload = {
@@ -115,29 +120,62 @@ const CreateArticle = () => {
         content: blocks,
         contentBlocks: blocks,
       };
+
       if (id) {
         await updateArticle(id, payload);
-        alert("Updated");
+
+        toast.success("Article updated successfully", {
+          id: loadingToast,
+        });
       } else {
         await createArticle(payload);
-        alert("Created");
-        dispatch(resetArticle());
-      }
 
+        toast.success("Article created successfully", {
+          id: loadingToast,
+        });
+      }
+      
+      dispatch(resetArticle());
       navigate("/teacher/articles");
 
     } catch (err) {
       console.error(err);
-      alert("Something went wrong");
+
+      toast.error(
+        err?.response?.data?.message || "Something went wrong",
+        { id: loadingToast }
+      );
     }
   };
 
   const handleClose = () => {
-    const confirmLeave = window.confirm("You have unsaved changes. Are you sure you want to leave?");
-    if (confirmLeave) {
-      dispatch(resetArticle());
-      navigate("/teacher/articles");
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm">
+          You have unsaved changes. Leave anyway?
+        </p>
+
+        <div className="flex gap-2 justify-end">
+          <Button
+            onClick={() => toast.dismiss(t.id)}
+            variant="secondary"
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={() => {
+              toast.dismiss(t.id);
+              dispatch(resetArticle());
+              navigate("/teacher/articles");
+            }}
+            variant="danger"
+          >
+            Leave
+          </Button>
+        </div>
+      </div>
+    ));
   };
 
   return (

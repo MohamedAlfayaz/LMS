@@ -6,6 +6,7 @@ import { closeModal } from "../../store/modalSlice";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import toast from "react-hot-toast";
 
 import Button from "../ui/Button";
 import Input from "../ui/Input";
@@ -48,15 +49,29 @@ const AddStudent = () => {
   const onSubmit = (data) => {
     setServerError("");
 
+    const loadingToast = toast.loading("Creating student...");
+
     mutate(data, {
       onSuccess: () => {
+        toast.success("Student created successfully", {
+          id: loadingToast,
+        });
+
         reset();
         dispatch(closeModal());
       },
+
       onError: (err) => {
-        setServerError(
-          err?.response?.data?.message || "Something went wrong"
-        );
+        console.error(err);
+
+        const message =
+          err?.response?.data?.message || "Something went wrong";
+
+        toast.error(message, {
+          id: loadingToast,
+        });
+
+        setServerError(message); // optional (can remove if you want clean UI)
       },
     });
   };

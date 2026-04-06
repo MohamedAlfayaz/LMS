@@ -3,22 +3,53 @@ const Article = require("../models/Article");
 const Analytics = require("../models/Analytics");
 const auth = require("../middleware/authMiddleware");
 const User = require("../models/User");
-
+const mongoose = require("mongoose");
 
 const router = express.Router();
 
 router.get("/", auth, async (req, res) => {
   try {
-    // 1️⃣ Total Articles
-    const totalArticles = await Article.countDocuments();
+    // ✅ 1. Total Articles
+    const totalArticles = await Article.countDocuments({
+      createdBy: req.user.id,
+    });
 
-    // 5️⃣ Total Students (Login Count)
+    // ✅ 2. Total Students
     const totalStudents = await User.countDocuments({ role: "student" });
 
+    // ✅ COMMON STAGE → FILTER ONLY VALID ARTICLES
+    const validLookup = [
+      {
+        $lookup: {
+          from: "articles",
+          localField: "articleId",
+          foreignField: "_id",
+          as: "article",
+        },
+      },
+      { $unwind: "$article" },
 
-    // 2️⃣ Total Views
-    // Count distinct student-article combinations
+      // 🔒 FILTER BY TEACHER
+      {
+        $match: {
+          "article.createdBy": new mongoose.Types.ObjectId(req.user.id),
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "studentId",
+          foreignField: "_id",
+          as: "student",
+        },
+      },
+      { $unwind: "$student" },
+    ];
+
+    // ✅ 3. Total Unique Views
     const totalViewsAgg = await Analytics.aggregate([
+      ...validLookup,
       {
         $group: {
           _id: {
@@ -38,8 +69,13 @@ router.get("/", auth, async (req, res) => {
     const totalViews =
       totalViewsAgg.length > 0 ? totalViewsAgg[0].totalUniqueViews : 0;
 
-    // 3️⃣ Category Distribution (FOR PIE CHART)
+    // ✅ 4. Category Distribution
     const categoryAgg = await Article.aggregate([
+      {
+        $match: {
+          createdBy: new mongoose.Types.ObjectId(req.user.id),
+        },
+      },
       {
         $group: {
           _id: "$category",
@@ -48,22 +84,25 @@ router.get("/", auth, async (req, res) => {
       },
     ]);
 
-    const categoryLabels = categoryAgg.map(item => item._id);
-    const categoryData = categoryAgg.map(item => item.count);
+    const categoryLabels = categoryAgg.map((item) => item._id);
+    const categoryData = categoryAgg.map((item) => item.count);
 
-    // 4️⃣ Top Category
+    // ✅ 5. Top Category
     let topCategory = "-";
     let topCategoryCount = 0;
 
     if (categoryAgg.length > 0) {
-      const sorted = categoryAgg.sort((a, b) => b.count - a.count);
-      topCategory = sorted[0]._id;
-      topCategoryCount = sorted[0].count;
+      const top = categoryAgg.reduce((max, item) =>
+        item.count > max.count ? item : max
+      );
+      topCategory = top._id;
+      topCategoryCount = top.count;
     }
 
     // Views Per Article
     // Unique Student Views Per Article
     const viewsAgg = await Analytics.aggregate([
+      ...validLookup,
       {
         $group: {
           _id: {
@@ -93,10 +132,9 @@ router.get("/", auth, async (req, res) => {
     const viewsLabels = viewsAgg.map(v => v.article.title);
     const viewsData = viewsAgg.map(v => v.uniqueStudents);
 
-
-    // Student Progress
-    // Student Progress (WITH REAL STUDENT NAMES)
+    // ✅ 7. Student Progress (FILTER VALID ARTICLES)
     const studentAgg = await Analytics.aggregate([
+      ...validLookup,
       {
         $group: {
           _id: "$studentId",
@@ -105,7 +143,7 @@ router.get("/", auth, async (req, res) => {
       },
       {
         $lookup: {
-          from: "users",           // collection name (IMPORTANT: lowercase plural)
+          from: "users",
           localField: "_id",
           foreignField: "_id",
           as: "student",
@@ -119,11 +157,13 @@ router.get("/", auth, async (req, res) => {
           totalDuration: 1,
         },
       },
+      { $sort: { totalDuration: -1 } },
     ]);
 
-    const studentLabels = studentAgg.map(s => s.name);
-    const studentData = studentAgg.map(s => s.totalDuration);
+    const studentLabels = studentAgg.map((s) => s.name);
+    const studentData = studentAgg.map((s) => s.totalDuration);
 
+    // ✅ FINAL RESPONSE
     res.json({
       summary: {
         totalArticles,
@@ -143,14 +183,12 @@ router.get("/", auth, async (req, res) => {
       studentProgress: {
         labels: studentLabels,
         data: studentData,
-      }
+      },
     });
-
   } catch (err) {
-    console.error(err);
+    console.error("Analytics Error:", err);
     res.status(500).json({ message: "Analytics error" });
   }
 });
-
 
 module.exports = router;
