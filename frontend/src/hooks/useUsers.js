@@ -1,37 +1,52 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getUsers, createUser, updateUser, deleteUser } from "../api/usersApi";
+import { getUsers, createUser, updateUser, deleteUser, createStudent } from "../api/usersApi";
+
+const USERS_KEY = ["users"];
 
 export const useUsers = () => {
   return useQuery({
-    queryKey: ["users"],
+    queryKey: USERS_KEY,
     queryFn: getUsers,
 
-    retry: true,              // retry if backend fails
-    retryDelay: 2000,        // retry every 2 sec
-    refetchOnWindowFocus: true, // tab focus வந்தா refetch
-    refetchInterval: 5000,
+    retry: 2, // don't retry forever
+    retryDelay: 2000,
+    refetchOnWindowFocus: true,
+
+    // ❌ REMOVE THIS unless needed
+    // refetchInterval: 5000,
   });
 };
 
-export const useCreateUser = () => {
+// 🔥 COMMON INVALIDATE FUNCTION
+const useInvalidateUsers = () => {
   const qc = useQueryClient();
+  return () => qc.invalidateQueries({ queryKey: USERS_KEY });
+};
+
+export const useCreateUser = () => {
+  const invalidate = useInvalidateUsers();
 
   return useMutation({
     mutationFn: createUser,
-    onSuccess: () => {
-      qc.invalidateQueries(["users"]);
-    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useCreateStudent = () => {
+  const invalidate = useInvalidateUsers();
+
+  return useMutation({
+    mutationFn: createStudent, // ✅ FIXED (no direct API call)
+    onSuccess: invalidate,
   });
 };
 
 export const useUpdateUser = () => {
-  const qc = useQueryClient();
+  const invalidate = useInvalidateUsers();
 
   return useMutation({
     mutationFn: updateUser,
-    onSuccess: () => {
-      qc.invalidateQueries(["users"]);
-    },
+    onSuccess: invalidate,
   });
 };
 
@@ -41,13 +56,13 @@ export const useDeleteUser = () => {
   return useMutation({
     mutationFn: deleteUser,
 
-    // 🔥 OPTIMISTIC UPDATE
+    // 🔥 SAFE OPTIMISTIC UPDATE
     onMutate: async (id) => {
-      await qc.cancelQueries(["users"]);
+      await qc.cancelQueries({ queryKey: USERS_KEY });
 
-      const previous = qc.getQueryData(["users"]);
+      const previous = qc.getQueryData(USERS_KEY);
 
-      qc.setQueryData(["users"], (old) =>
+      qc.setQueryData(USERS_KEY, (old = []) =>
         old.filter((u) => u._id !== id)
       );
 
@@ -55,11 +70,13 @@ export const useDeleteUser = () => {
     },
 
     onError: (err, id, context) => {
-      qc.setQueryData(["users"], context.previous);
+      if (context?.previous) {
+        qc.setQueryData(USERS_KEY, context.previous);
+      }
     },
 
     onSettled: () => {
-      qc.invalidateQueries(["users"]);
+      qc.invalidateQueries({ queryKey: USERS_KEY });
     },
   });
 };

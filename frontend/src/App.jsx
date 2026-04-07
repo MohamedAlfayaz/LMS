@@ -15,6 +15,8 @@ import Welcome from "./pages/Welcome";
 import AdminPanel from "./pages/AdminPanel";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
+import StudentList from "./components/teacher/StudentList";
+import ViewArticle from "./components/teacher/ViewArticle";
 
 import StudentArticles from "./components/student/StudentArticles";
 import StudentHistory from "./components/student/StudentHistory";
@@ -119,11 +121,33 @@ const App = () => {
         />
 
         <Route
+          path="/teacher/view-article/:id"
+          element={
+            <TeacherRoute>
+              <MainLayout>
+                <ViewArticle />
+              </MainLayout>
+            </TeacherRoute>
+          }
+        />
+
+        <Route
           path="/teacher/analytics"
           element={
             <TeacherRoute>
               <MainLayout>
                 <TeacherAnalytics />
+              </MainLayout>
+            </TeacherRoute>
+          }
+        />
+
+         <Route
+          path="/teacher/students"
+          element={
+            <TeacherRoute>
+              <MainLayout>
+                <StudentList />
               </MainLayout>
             </TeacherRoute>
           }

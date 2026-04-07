@@ -10,7 +10,8 @@ import {
   BarChart3,
   BookOpen,
   StickyNote,
-  History
+  History,
+  User,
 } from "lucide-react";
 import Button from "./ui/Button"
 
@@ -48,6 +49,7 @@ const Navbar = () => {
       { name: "Dashboard", path: "/teacher", icon: LayoutDashboard },
       { name: "Create & View Articles", path: "/teacher/articles", icon: FileText },
       { name: "Analytics", path: "/teacher/analytics", icon: BarChart3 },
+      { name: "Students", path: "/teacher/students", icon: User },
     ],
     student: [
       { name: "Dashboard", path: "/student", icon: LayoutDashboard },

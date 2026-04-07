@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiEdit2, FiTrash2, FiBook, FiSearch } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiBook, FiSearch, FiEye } from "react-icons/fi";
 import { useArticles } from "../../hooks/useArticles";
 import { useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
@@ -8,6 +8,7 @@ import { useTable } from "../../hooks/useTable"; // 🔥 NEW
 import Loading from "../ui/Loading";
 import ConfirmModal from "../ui/ConfirmModal";
 import toast from "react-hot-toast";
+import Pagination from "../ui/Pagination";
 
 
 const ArticlesTable = () => {
@@ -175,6 +176,16 @@ const ArticlesTable = () => {
 
                       <td className="pr-6">
                         <div className="flex justify-end gap-2">
+
+                          {/* 👁 VIEW */}
+                          <Button
+                            onClick={() => navigate(`/teacher/view-article/${article._id}`)}
+                            variant="lightgray"
+                          >
+                            <FiEye />
+                          </Button>
+
+                          {/* ✏ EDIT */}
                           <Button
                             onClick={() => navigate(`/teacher/edit-article/${article._id}`)}
                             variant="warning"
@@ -182,12 +193,14 @@ const ArticlesTable = () => {
                             <FiEdit2 />
                           </Button>
 
+                          {/* 🗑 DELETE */}
                           <Button
                             onClick={() => setDeleteId(article._id)}
                             variant="danger"
                           >
                             <FiTrash2 />
                           </Button>
+
                         </div>
                       </td>
 
@@ -248,43 +261,11 @@ const ArticlesTable = () => {
             </div>
 
             {/* 🔥 PAGINATION */}
-            <div className="flex justify-center items-center gap-2 mt-6">
-
-              <Button
-                onClick={() => setPage(page - 1)}
-                disabled={page === 1}
-                variant="lightgray"
-              >
-                Prev
-              </Button>
-
-              {[...Array(totalPages)].map((_, i) => {
-                const pageNum = i + 1;
-
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setPage(pageNum)}
-                    className={`px-3 py-1 text-xs border rounded-lg
-                    ${page === pageNum
-                        ? "bg-indigo-600 text-white"
-                        : "bg-white hover:bg-gray-100"
-                      }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-
-              <Button
-                onClick={() => setPage(page + 1)}
-                disabled={page === totalPages}
-                variant="lightgray"
-              >
-                Next
-              </Button>
-
-            </div>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              setPage={setPage}
+            />
           </>
         )}
 

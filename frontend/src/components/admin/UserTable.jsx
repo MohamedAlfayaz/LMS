@@ -1,24 +1,24 @@
-import Button from "../ui/Button";
 import Input from "../ui/Input";
-import CreateUserModal from "./CreateUserModal";
+import Pagination from "../ui/Pagination";
+import UserTableUI from "../ui/UserTableUI";
+import UserCard from "../ui/UserCard";
 
 import { useState } from "react";
 import {
-  FiTrash2,
-  FiEdit2,
   FiSearch,
   FiUsers,
   FiUser,
   FiUserCheck,
   FiUserPlus,
-  FiX
 } from "react-icons/fi";
 
 import { useDeleteUser } from "../../hooks/useUsers";
-import { useTable } from "../../hooks/useTable"; // 🔥 NEW
+import { useTable } from "../../hooks/useTable";
 import Loading from "../ui/Loading";
 import ConfirmModal from "../ui/ConfirmModal";
 import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { openModal } from "../../store/modalSlice";
 
 const roles = [
   { key: "All", label: "All", icon: <FiUsers /> },
@@ -27,14 +27,13 @@ const roles = [
   { key: "student", label: "Student", icon: <FiUserPlus /> },
 ];
 
-export default function UsersTable({ users, loading }) {
-  const [editUser, setEditUser] = useState(null);
-  const [open, setOpen] = useState(false);
+export default function UsersTable({ users = [], loading, setEditUser }) {
+
+  const dispatch = useDispatch();
   const deleteUser = useDeleteUser();
 
   const [deleteId, setDeleteId] = useState(null);
 
-  // 🔥 GLOBAL TABLE STATE
   const {
     search,
     category,
@@ -57,19 +56,11 @@ export default function UsersTable({ users, loading }) {
         id: loadingToast,
       });
 
-      setDeleteId(null); // close popup
+      setDeleteId(null);
     } catch (err) {
-      console.error(err);
-
-      toast.error(
-        err?.response?.data?.message || "Delete failed",
-        { id: loadingToast }
-      );
+      toast.error("Delete failed", { id: loadingToast });
     }
   };
-
-  const truncateName = (name) =>
-    name.length > 8 ? name.slice(0, 8) + "..." : name;
 
   return (
     <div className="bg-white rounded-2xl shadow-md overflow-hidden">
@@ -145,225 +136,47 @@ export default function UsersTable({ users, loading }) {
       ) : (
         <>
           {/* DESKTOP */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-sm border-separate border-spacing-y-2">
-
-              {/* HEADER */}
-              <thead>
-                <tr className="text-gray-500 text-xs uppercase">
-                  <th className="text-left px-14">User</th>
-                  <th className="text-left px-6">Email</th>
-                  <th className="text-left px-3.5">Role</th>
-                  <th className="text-right pr-12">Actions</th>
-                </tr>
-              </thead>
-
-              {/* BODY */}
-              <tbody>
-                {paginated.map((u) => (
-                  <tr
-                    key={u._id}
-                    className="bg-white shadow-sm hover:shadow-md transition rounded-xl"
-                  >
-
-                    {/* USER */}
-                    <td className="px-4 py-3 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-semibold">
-                        {u.name.charAt(0).toUpperCase()}
-                      </div>
-
-                      <div>
-                        <p className="font-semibold text-gray-800">{u.name}</p>
-                      </div>
-                    </td>
-
-                    {/* EMAIL */}
-                    <td className="text-gray-600">
-                      <span className="bg-gray-100 px-2 py-1 rounded-md text-xs">
-                        {u.email}
-                      </span>
-                    </td>
-
-                    {/* ROLE */}
-                    <td>
-                      <span
-                        className={`px-3 py-1 text-xs rounded-full font-medium 
-                          ${u.role === "admin"
-                            ? "bg-purple-100 text-purple-700"
-                            : u.role === "teacher"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-blue-100 text-blue-700"
-                          }
-                        `}
-                      >
-                        {u.role}
-                      </span>
-                    </td>
-
-                    {/* ACTIONS */}
-                    <td className="pr-6">
-                      <div className="flex justify-end gap-2">
-
-                        <Button
-                          onClick={() => {
-                            setEditUser(u);
-                            setOpen(true);
-                          }}
-                          variant="warning"
-                        >
-                          <FiEdit2 />
-                        </Button>
-
-                        <Button
-                          onClick={() => setDeleteId(u._id)}
-                          variant="danger">
-                          <FiTrash2 />
-                        </Button>
-
-                      </div>
-                    </td>
-
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <UserTableUI
+            data={paginated}
+            onEdit={(u) => {
+              setEditUser(u);
+              dispatch(openModal());
+            }}
+            onDelete={(id) => setDeleteId(id)}
+          />
 
           {/* MOBILE */}
           <div className="md:hidden p-4 space-y-4">
             {paginated.map((u) => (
-              <div
+              <UserCard
                 key={u._id}
-                className="bg-white rounded-2xl p-4 shadow-md border border-gray-100"
-              >
-
-                {/* TOP */}
-                <div className="flex justify-between items-start">
-
-                  {/* USER INFO */}
-                  <div className="flex gap-3 items-center">
-                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-semibold text-sm shadow">
-                      {u.name.charAt(0).toUpperCase()}
-                    </div>
-
-                    <div>
-                      <p className="font-semibold text-gray-800 text-sm">
-                        {truncateName(u.name)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* ROLE BADGE */}
-                  <span
-                    className={`px-2 py-1 text-[10px] rounded-full font-medium
-                      ${u.role === "admin"
-                        ? "bg-purple-100 text-purple-700"
-                        : u.role === "teacher"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-blue-100 text-blue-700"
-                      }
-                    `}
-                  >
-                    {u.role}
-                  </span>
-                </div>
-
-                {/* EMAIL BLOCK */}
-                <div className="mt-3 bg-gray-50 rounded-lg px-3 py-2">
-                  <p className="text-[11px] text-gray-400">Email</p>
-                  <p className="text-xs text-gray-700 break-all">
-                    {u.email}
-                  </p>
-                </div>
-
-                {/* ACTIONS */}
-                <div className="flex justify-between gap-2 mt-4">
-
-                  <Button
-                    onClick={() => {
-                      setEditUser(u);
-                      setOpen(true);
-                    }}
-                    variant="warning"
-                  >
-                    <FiEdit2 size={14} />
-                    Edit
-                  </Button>
-
-                  <Button
-                    onClick={() => setDeleteId(u._id)}
-                    variant="danger"
-                  >
-                    <FiTrash2 size={14} />
-                    Delete
-                  </Button>
-
-                </div>
-
-              </div>
+                user={u}
+                onEdit={() => {
+                  setEditUser(u);
+                  dispatch(openModal());
+                }}
+                onDelete={() => setDeleteId(u._id)}
+              />
             ))}
           </div>
 
           {/* 🔥 PAGINATION */}
-          <div className="flex justify-center items-center gap-2 my-3">
-
-            <Button
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-              variant="lightgray"
-            >
-              Prev
-            </Button>
-
-            {[...Array(totalPages)].map((_, i) => {
-              const pageNum = i + 1;
-
-              return (
-                <button
-                  key={i}
-                  onClick={() => setPage(pageNum)}
-                  className={`px-3 py-1 text-xs border rounded-lg
-                              ${page === pageNum
-                      ? "bg-indigo-600 text-white"
-                      : "bg-white hover:bg-gray-100"
-                    }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-
-            <Button
-              onClick={() => setPage(page + 1)}
-              disabled={page === totalPages}
-              variant="lightgray"
-            >
-              Next
-            </Button>
-
-          </div>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            setPage={setPage}
+          />
         </>
       )}
 
-      {/* MODAL */}
-      {open && (
-        <CreateUserModal
-          onClose={() => {
-            setOpen(false);
-            setEditUser(null);
-          }}
-          editUser={editUser}
-        />
-      )}
-
+      {/* DELETE MODAL */}
       <ConfirmModal
         isOpen={!!deleteId}
-        title="Delete Article"
-        message="Are you sure you want to delete this article?"
+        title="Delete User"
+        message="Are you sure you want to delete this user?"
         confirmText="Delete"
         onConfirm={handleDelete}
         onCancel={() => setDeleteId(null)}
-        loading={loading}
       />
     </div>
   );

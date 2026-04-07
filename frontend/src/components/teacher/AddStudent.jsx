@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useCreateStudent } from "../../hooks/useAddStudent";
+import React, { useState, useEffect } from "react";
+import { useUpdateUser, useCreateStudent } from "../../hooks/useUsers"; // ✅ ADD
 import { useDispatch } from "react-redux";
 import { closeModal } from "../../store/modalSlice";
 
@@ -17,21 +17,31 @@ import {
   FaMailBulk,
   FaUser,
   FaUserPlus,
+  FaEdit,
 } from "react-icons/fa";
+import { FiX } from "react-icons/fi";
 
-// ✅ Validation Schema
-const schema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Invalid email"),
-  password: z.string().min(6, "Minimum 6 characters")
-    .regex(/[A-Z]/, "At least one uppercase letter")
-    .regex(/[0-9]/, "At least one number")
-    .regex(/[@$!%*?&]/, "At least one special character"),
-});
+// ✅ Dynamic schema
+const getSchema = (isEdit) =>
+  z.object({
+    name: z.string().min(2, "Name is required"),
+    email: z.string().email("Invalid email"),
+    password: isEdit
+      ? z.string().optional()
+      : z.string()
+        .min(6, "Minimum 6 characters")
+        .regex(/[A-Z]/, "At least one uppercase letter")
+        .regex(/[0-9]/, "At least one number")
+        .regex(/[@$!%*?&]/, "At least one special character"),
+  });
 
-const AddStudent = () => {
+const AddStudent = ({ editUser }) => {
   const dispatch = useDispatch();
-  const { mutate, isPending } = useCreateStudent();
+
+  const isEdit = !!editUser;
+
+  const { mutate: createStudent, isPending: creating } = useCreateStudent();
+  const { mutate: updateUser, isPending: updating } = useUpdateUser();
 
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -42,65 +52,93 @@ const AddStudent = () => {
     reset,
     formState: { errors, isValid },
   } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(getSchema(isEdit)),
     mode: "onChange",
   });
+
+  // ✅ Prefill for edit
+  useEffect(() => {
+    if (editUser) {
+      reset({
+        name: editUser.name,
+        email: editUser.email,
+      });
+    }
+  }, [editUser, reset]);
 
   const onSubmit = (data) => {
     setServerError("");
 
-    const loadingToast = toast.loading("Creating student...");
+    const loadingToast = toast.loading(
+      isEdit ? "Updating student..." : "Creating student..."
+    );
 
-    mutate(data, {
-      onSuccess: () => {
-        toast.success("Student created successfully", {
-          id: loadingToast,
-        });
+    if (isEdit) {
+      // ✏️ UPDATE
+      updateUser(
+        { id: editUser._id, form: data },
+        {
+          onSuccess: () => {
+            toast.success("Student updated successfully", {
+              id: loadingToast,
+            });
+            dispatch(closeModal());
+          },
+          onError: (err) => {
+            const message =
+              err?.response?.data?.message || "Update failed";
 
-        reset();
-        dispatch(closeModal());
-      },
+            toast.error(message, { id: loadingToast });
+            setServerError(message);
+          },
+        }
+      );
+    } else {
+      // ➕ CREATE
+      createStudent(data, {
+        onSuccess: () => {
+          toast.success("Student created successfully", {
+            id: loadingToast,
+          });
 
-      onError: (err) => {
-        console.error(err);
+          reset();
+          dispatch(closeModal());
+        },
+        onError: (err) => {
+          const message =
+            err?.response?.data?.message || "Something went wrong";
 
-        const message =
-          err?.response?.data?.message || "Something went wrong";
-
-        toast.error(message, {
-          id: loadingToast,
-        });
-
-        setServerError(message); // optional (can remove if you want clean UI)
-      },
-    });
+          toast.error(message, { id: loadingToast });
+          setServerError(message);
+        },
+      });
+    }
   };
 
   return (
     <div className="space-y-5">
 
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex justify-center items-center gap-3 mb-2">
 
-        {/* ICON BOX */}
-        <div className="w-10 h-10 flex items-center justify-center rounded-xl 
-                  bg-green-100 text-green-600 shadow-sm">
-          <FaUserPlus />
+        <div className={`w-10 h-10 flex items-center justify-center rounded-xl shadow-sm
+          ${isEdit ? "bg-blue-100 text-blue-600" : "bg-green-100 text-green-600"}`}>
+          {isEdit ? <FaEdit /> : <FaUserPlus />}
         </div>
 
-        {/* TEXT */}
         <div>
           <h2 className="text-lg font-semibold text-gray-800">
-            Create Student
+            {isEdit ? "Edit Student" : "Create Student"}
           </h2>
           <p className="text-xs text-gray-500">
-            Add new student account details
+            {isEdit
+              ? "Update student details"
+              : "Add new student account"}
           </p>
         </div>
-
       </div>
 
-      {/* Server Error */}
+      {/* ERROR */}
       {serverError && (
         <div className="text-sm px-3 py-2 rounded-md border bg-red-50 text-red-700 border-red-200">
           {serverError}
@@ -110,77 +148,81 @@ const AddStudent = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
         {/* NAME */}
-        <Input
-          type="text"
-          label="Full Name"
-          placeholder="Student Full Name"
-          icon={<FaUser />}
-          {...register("name")}
-        />
-        {errors.name && (
-          <p className="text-red-500 text-xs">{errors.name.message}</p>
-        )}
-
-        {/* EMAIL */}
-        <Input
-          type="email"
-          label="Email Address"
-          placeholder="Student Email"
-          icon={<FaMailBulk />}
-          {...register("email")}
-        />
-        {errors.email && (
-          <p className="text-red-500 text-xs">{errors.email.message}</p>
-        )}
-
-        {/* PASSWORD */}
-        <div className="relative mt-2">
+        <div>
           <Input
-            type={showPassword ? "text" : "password"}
-            label="Password"
-            icon={<FaUserLock />}
-            placeholder="••••••••"
-            {...register("password")}
+            label="Full Name"
+            placeholder="Enter full name"
+            icon={<FaUser />}
+            {...register("name")}
           />
-
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            <Button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              variant="ghost"
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </Button>
-          </div>
-
-          {errors.password && (
-            <p className="text-red-500 text-xs">
-              {errors.password.message}
-            </p>
+          {errors.name && (
+            <p className="text-red-500 text-xs">{errors.name.message}</p>
+          )}
+        </div>
+        <div>
+          {/* EMAIL */}
+          <Input
+            label="Email Address"
+            placeholder="you@example.com"
+            icon={<FaMailBulk />}
+            {...register("email")}
+          />
+          {errors.email && (
+            <p className="text-red-500 text-xs">{errors.email.message}</p>
           )}
         </div>
 
-        {/* BUTTONS */}
-        <div className="flex justify-end gap-3 pt-2">
+        {/* PASSWORD (ONLY CREATE) */}
+        {!isEdit && (
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              label="Password"
+              placeholder="Minimum 6 characters"
+              icon={<FaUserLock />}
+              {...register("password")}
+            />
+
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <Button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                variant="ghost"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </Button>
+            </div>
+
+            {errors.password && (
+              <p className="text-red-500 text-xs">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ACTIONS */}
+        <div className="flex justify-end gap-2 pt-2">
 
           <Button
             type="button"
             onClick={() => dispatch(closeModal())}
             variant="secondary"
           >
+            <FiX />
             Cancel
           </Button>
 
           <Button
-            variant="success"
-            disabled={!isValid || isPending}
+            disabled={!isValid || creating || updating}
           >
-            <FaUserPlus />
-
-            {isPending ? (
+            {(creating || updating) ? (
               <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
             ) : (
-              "Create"
+              <>
+                {isEdit ? <FaEdit size={18} /> : <FaUserPlus size={18} />}
+                {isEdit ? "Update" : "Create"}
+              </>
             )}
           </Button>
 
