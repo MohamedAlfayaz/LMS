@@ -247,6 +247,7 @@ const ArticlesTable = () => {
                       <FiEye />
                       view
                     </Button>
+                    
                     <Button
                       onClick={() => navigate(`/teacher/edit-article/${article._id}`)}
                       variant="warning"
