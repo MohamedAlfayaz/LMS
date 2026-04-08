@@ -72,8 +72,6 @@ app.use(
   })
 );
 
-app.options("*", cors());
-
 // Body Parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
