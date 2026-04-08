@@ -32,17 +32,26 @@ router.post("/register", async (req, res) => {
 
 /* ---------- LOGIN ---------- */
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
 
   const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(400).json({ message: "Invalid credentials" });
+  }
+
   const match = await bcrypt.compare(password, user.password);
 
-  if (!user || !match) {
+  if (!match) {
     return res.status(400).json({ message: "Invalid credentials" });
   }
 
   const token = jwt.sign(
-    { id: user._id, role: user.role },
+    {
+      id: user._id,
+      role: user.role,
+      username: user.name, // 👈 confirm this field
+    },
     process.env.JWT_SECRET,
     { expiresIn: "1d" }
   );
