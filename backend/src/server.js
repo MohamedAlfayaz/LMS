@@ -50,8 +50,8 @@ if (!fs.existsSync(uploadsPath)) {
 /* ------------------ MIDDLEWARE ------------------ */
 
 // CORS
-const allowedOrigins = process.env.CLIENT_URLS
-  ? process.env.CLIENT_URLS.split(",")
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(",")
   : [];
 
 app.use(
