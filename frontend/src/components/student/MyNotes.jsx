@@ -53,7 +53,10 @@ const MyNotes = () => {
         {/* 🔥 HEADER */}
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-3 text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            <BookOpen size={32} /> My Notes
+            <span className="text-indigo-600">
+              <BookOpen size={32} />
+            </span>
+            My Notes
           </h2>
 
           <div className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow">
@@ -63,9 +66,9 @@ const MyNotes = () => {
 
         {/* 🔥 EMPTY STATE */}
         {notes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-dashed shadow-sm">
+          <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl shadow-sm">
 
-            <div className="text-6xl mb-4">📝</div>
+            <div className="mb-4 text-indigo-600"><BookOpen size={40} /></div>
 
             <p className="text-xl font-semibold text-gray-700">
               No notes yet

@@ -52,7 +52,7 @@ const StudentArticles = () => {
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
 
             {/* SEARCH */}
-            <div className="w-full sm:w-64">
+            <div className="w-full">
               <Input
                 label="Search"
                 type="text"

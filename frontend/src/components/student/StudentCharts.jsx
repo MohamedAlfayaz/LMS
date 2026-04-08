@@ -49,7 +49,7 @@ const StudentCharts = ({ labels = [], values = [] }) => {
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-[350px] h-[350px]">
+        <div className="pb-4 h-85">
           <Pie data={data} options={options} />
         </div>
       </div>

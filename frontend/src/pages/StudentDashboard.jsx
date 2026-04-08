@@ -83,7 +83,7 @@ const StudentDashboard = () => {
           {/* 📊 CHART SECTION */}
           <div className="bg-white rounded-3xl shadow-md p-6 border border-gray-100">
 
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center">
               <h3 className="text-xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Reading Analytics
               </h3>
@@ -98,9 +98,7 @@ const StudentDashboard = () => {
             />
 
           </div>
-
         </div>
-
       </div>
     </div>
   );

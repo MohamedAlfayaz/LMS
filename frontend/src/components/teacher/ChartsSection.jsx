@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useAnalytics } from "../../hooks/useAnalytics";
 import { setAnalytics } from "../../store/analyticsSlice";
@@ -176,8 +176,23 @@ const ChartsSection = () => {
     }
   };
 
+  const pieOptions = useMemo(() => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: 0 },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            boxWidth: 12,
+            padding: 16
+          }
+        }
+      }
+    }), []);
+
   return (
-    <div className="p-6 space-y-8 bg-gray-50">
+    <div className="p-4 space-y-8 bg-gray-50">
 
       {/* HEADER */}
       <div className="flex flex-col gap-1">
@@ -222,8 +237,8 @@ const ChartsSection = () => {
             </span>
           </div>
 
-          <div className="h-72">
-            <Pie data={pieData} options={{ responsive: true }} />
+          <div className="h-85">
+            <Pie data={pieData} options={pieOptions} />
           </div>
 
         </div>

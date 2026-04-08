@@ -60,7 +60,7 @@ const StudentHistory = () => {
             </p>
           </div>
 
-          <div className="bg-indigo-600 px-5 py-2 rounded-xl shadow text-sm font-bold text-white">
+          <div className="bg-indigo-600 text-center px-5 py-2 rounded-xl shadow text-sm font-bold text-white">
             {history.length} Articles
           </div>
         </div>
@@ -98,7 +98,7 @@ const StudentHistory = () => {
         {/* EMPTY STATE */}
         {history.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 border border-dashed rounded-3xl bg-white">
-            <div className="text-5xl mb-4">📚</div>
+            <div className="text-5xl mb-4"><FiBookOpen /></div>
 
             <p className="text-lg font-semibold text-gray-700">
               No reading activity yet

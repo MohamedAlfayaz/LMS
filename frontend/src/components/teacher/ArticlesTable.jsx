@@ -239,6 +239,14 @@ const ArticlesTable = () => {
                   <div className="border-t my-3"></div>
 
                   <div className="flex justify-between gap-2">
+
+                    <Button
+                      onClick={() => navigate(`/teacher/view-article/${article._id}`)}
+                      variant="lightgray"
+                    >
+                      <FiEye />
+                      view
+                    </Button>
                     <Button
                       onClick={() => navigate(`/teacher/edit-article/${article._id}`)}
                       variant="warning"

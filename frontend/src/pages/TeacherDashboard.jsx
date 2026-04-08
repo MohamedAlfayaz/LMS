@@ -34,8 +34,8 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-50 py-6">
+      <div className="max-w-8xl mx-auto space-y-8">
 
         {/* 🔥 HEADER */}
         <div>
@@ -85,7 +85,7 @@ const TeacherDashboard = () => {
         </div>
 
         {/* 🔥 CHARTS */}
-        <div className="bg-white rounded-3xl shadow-md p-2 border border-gray-100">
+        <div className="bg-white rounded-3xl shadow-md border border-gray-100">
           <ChartsSection />
         </div>
 
