@@ -189,7 +189,7 @@ export default function CreateUserModal({ onClose, editUser }) {
               <button
                 type="button"
                 key={role}
-                onClick={() => reset({ ...getValues(), role })}
+                onClick={() => setValue("role", role )}
                 className={`flex-1 py-2 rounded-lg text-xs font-medium border transition
                     ${watch("role") === role
                     ? "bg-indigo-600 text-white border-indigo-600"
